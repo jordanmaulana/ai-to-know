@@ -1,0 +1,6 @@
+{# Usage: {% include "_partials/stat_card.html" with label="Published" value=totals.published note="live on the site" href=url %} #}
+{% if href %}<a href="{{ href }}" class="block rounded-xl border border-rule bg-card p-5 transition hover:border-accent/40 hover:bg-accent-soft/40">{% else %}<div class="rounded-xl border border-rule bg-card p-5">{% endif %}
+  <div class="font-mono text-[0.6875rem] tracking-widest text-muted uppercase">{{ label }}</div>
+  <div class="mt-2 text-3xl font-semibold tabular-nums tracking-tight">{{ value }}</div>
+  {% if note %}<div class="mt-1 text-xs text-muted">{{ note }}</div>{% endif %}
+{% if href %}</a>{% else %}</div>{% endif %}

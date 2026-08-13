@@ -1,1 +1,34 @@
-@import "tailwindcss";
+/* Stylesheet for the Django CMS templates.
+   The tokens below mirror the @theme inline block in frontend/src/styles.css — two separate
+   build pipelines (Tailwind CLI here, Vite there) mean they cannot share a file, so a token
+   change is a two-file change. Build with `make tw-build`; watch with `make tw-run`. */
+
+@import "tailwindcss" source(none);
+
+/* Pinned, not auto-detected: auto-detection starts at the CWD, so it only works when the CLI
+   runs from the repo root — and it also drags in frontend/src. Do not add ../syllabus unless
+   Dockerfile.backend's tailwind stage starts copying it too. */
+@source "../templates";
+
+@theme {
+  --font-sans: "Geist", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "Geist Mono", ui-monospace, SFMono-Regular, monospace;
+
+  /* Mineral paper + cold ink. One flat indigo marks the moment something became possible. */
+  --color-paper: hsl(150 9% 94%);
+  --color-card: hsl(0 0% 100%);
+  --color-ink: hsl(160 18% 7%);
+  --color-muted: hsl(165 7% 38%);
+  --color-rule: hsl(155 10% 85%);
+  --color-accent: hsl(249 65% 50%);
+  --color-accent-soft: hsl(249 60% 96%);
+}
+
+body {
+  font-family: var(--font-sans);
+}
+
+::selection {
+  background: var(--color-accent);
+  color: white;
+}

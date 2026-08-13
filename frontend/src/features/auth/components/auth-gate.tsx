@@ -7,8 +7,17 @@ import { ApiError } from "@/lib/api";
 import { me } from "@/features/auth/api";
 import { tokenAtom, userAtom } from "@/features/auth/state";
 
-const PUBLIC_PATHS = new Set(["/", "/login"]);
-const FULL_BLEED_PATHS = new Set([...PUBLIC_PATHS, "/onboarding"]);
+// The syllabus is public, and its detail routes are dynamic (/subjects/<slug>),
+// so membership is a predicate rather than a set.
+function isPublicPath(pathname: string) {
+  return (
+    pathname === "/" || pathname === "/login" || pathname.startsWith("/subjects/")
+  );
+}
+
+function isFullBleedPath(pathname: string) {
+  return isPublicPath(pathname) || pathname === "/onboarding";
+}
 
 export function AuthGate() {
   const [token, setToken] = useAtom(tokenAtom);
@@ -39,7 +48,7 @@ export function AuthGate() {
 
   useEffect(() => {
     if (!token) {
-      if (!PUBLIC_PATHS.has(pathname)) navigate({ to: "/login" });
+      if (!isPublicPath(pathname)) navigate({ to: "/login" });
       return;
     }
     if (!user) return;
@@ -49,12 +58,14 @@ export function AuthGate() {
       navigate({ to: "/onboarding" });
       return;
     }
-    if (user.onboarded && (PUBLIC_PATHS.has(pathname) || pathname === "/onboarding")) {
+    // "/" is the public syllabus, so signed-in readers stay there; only the
+    // auth-only screens bounce through to the dashboard.
+    if (user.onboarded && (pathname === "/login" || pathname === "/onboarding")) {
       navigate({ to: "/dashboard" });
     }
   }, [token, user, pathname, navigate]);
 
-  if (!token || !user || FULL_BLEED_PATHS.has(pathname)) {
+  if (!token || !user || isFullBleedPath(pathname)) {
     return <Outlet />;
   }
   return <AppShell />;

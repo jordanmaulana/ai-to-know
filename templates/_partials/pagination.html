@@ -1,0 +1,19 @@
+{# {% querystring %} (Django 5.1+) copies the current query string and replaces one key, so
+   filters and search survive a page change without a custom template tag. #}
+{% if page_obj.paginator.count %}
+  <nav class="mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-rule pt-4 text-sm">
+    {% if page_obj.has_previous %}
+      <a class="text-accent underline underline-offset-4" href="{% querystring page=page_obj.previous_page_number %}">Previous</a>
+    {% else %}
+      <span class="text-muted/60">Previous</span>
+    {% endif %}
+    <span class="font-mono text-[0.6875rem] tracking-widest text-muted uppercase">
+      Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }} · {{ page_obj.paginator.count }} row{{ page_obj.paginator.count|pluralize }}
+    </span>
+    {% if page_obj.has_next %}
+      <a class="text-accent underline underline-offset-4" href="{% querystring page=page_obj.next_page_number %}">Next</a>
+    {% else %}
+      <span class="text-muted/60">Next</span>
+    {% endif %}
+  </nav>
+{% endif %}

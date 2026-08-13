@@ -3,52 +3,91 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <title>{% block title %}Admin{% endblock %}</title>
+    <title>{% block title %}Admin{% endblock %} — AI to know</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="stylesheet" href="{% static 'output.css' %}" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Geist:wght@400..700&family=Geist+Mono:wght@400..600&display=swap" />
     {% block head %}{% endblock %}
   </head>
-  <body class="min-h-screen bg-slate-50 text-slate-900 antialiased">
-    {% with current=request.resolver_match.url_name %}
+  <body class="min-h-screen bg-paper text-ink antialiased">
+    {# view_name, not url_name: the CMS urls are namespaced, so the bare name would collide #}
+    {% with current=request.resolver_match.view_name %}
     <div class="flex h-screen overflow-hidden">
-      <aside class="flex w-60 shrink-0 flex-col justify-between bg-slate-900 text-slate-200">
+      <aside class="flex w-60 shrink-0 flex-col justify-between bg-ink text-paper/70">
         <div class="flex flex-col gap-6 px-4 py-6">
-          <div class="text-lg font-semibold tracking-tight text-white">Admin</div>
+          <div class="font-mono text-xs tracking-[0.2em] text-paper uppercase">ai&#8202;/&#8202;to&#8202;know</div>
           <nav class="flex flex-col gap-1 text-sm">
-            <a href="{% url 'dashboard' %}"
-               class="rounded px-3 py-2 transition {% if current == 'dashboard' %}bg-blue-500/15 text-white border-l-2 border-blue-400 -ml-px pl-2.5{% else %}text-slate-300 hover:bg-white/5{% endif %}">
+            <a href="{% url 'cms:dashboard' %}"
+               class="rounded px-3 py-2 transition {% if current == 'cms:dashboard' %}-ml-px border-l-2 border-accent bg-white/10 pl-2.5 text-white{% else %}hover:bg-white/5 hover:text-paper{% endif %}">
               Dashboard
             </a>
+            <a href="{% url 'cms:subjects' %}"
+               class="rounded px-3 py-2 transition {% if 'cms:subject' in current %}-ml-px border-l-2 border-accent bg-white/10 pl-2.5 text-white{% else %}hover:bg-white/5 hover:text-paper{% endif %}">
+              Subjects
+            </a>
+            <a href="{% url 'cms:queue' %}"
+               class="rounded px-3 py-2 transition {% if current == 'cms:queue' %}-ml-px border-l-2 border-accent bg-white/10 pl-2.5 text-white{% else %}hover:bg-white/5 hover:text-paper{% endif %}">
+              Review queue
+            </a>
+            <a href="{% url 'cms:editorial' %}"
+               class="rounded px-3 py-2 transition {% if current == 'cms:editorial' %}-ml-px border-l-2 border-accent bg-white/10 pl-2.5 text-white{% else %}hover:bg-white/5 hover:text-paper{% endif %}">
+              Editorial bar
+            </a>
           </nav>
+          <div class="flex flex-col gap-1 border-t border-white/10 pt-4 text-sm">
+            <a href="/admin/" class="rounded px-3 py-2 transition hover:bg-white/5 hover:text-paper">
+              Django admin <span aria-hidden>&#8599;</span>
+            </a>
+          </div>
         </div>
         <div class="flex flex-col gap-3 border-t border-white/10 px-4 py-4 text-xs">
           {% if user.is_authenticated %}
-            <div class="text-slate-400">
-              <div class="font-medium text-slate-200">{{ user.email|default:user.username }}</div>
-              {% if user.is_superuser %}<div>superuser</div>{% endif %}
+            <div>
+              <div class="font-medium text-paper">{{ user.email|default:user.username }}</div>
+              {% if user.is_superuser %}<div class="text-paper/50">superuser</div>{% endif %}
             </div>
             <form method="post" action="{% url 'logout' %}">
               {% csrf_token %}
               <button type="submit"
-                      class="w-full rounded bg-white/5 px-3 py-1.5 text-left text-slate-200 hover:bg-white/10">
+                      class="w-full rounded bg-white/5 px-3 py-1.5 text-left text-paper/80 transition hover:bg-white/10 hover:text-white">
                 Log out
               </button>
             </form>
           {% endif %}
         </div>
       </aside>
-      <section class="flex-1 overflow-y-auto bg-slate-50">
-        <div class="mx-auto max-w-7xl px-6 py-8">
+      <section class="flex-1 overflow-y-auto">
+        <div class="mx-auto max-w-6xl px-8 py-8">
+          <header class="flex flex-wrap items-start justify-between gap-4 border-b border-rule pb-5">
+            <div>
+              <h1 class="text-2xl font-semibold tracking-tight">{% block heading %}{% endblock %}</h1>
+              <p class="mt-1 text-sm text-muted">{% block subheading %}{% endblock %}</p>
+            </div>
+            <div class="flex flex-wrap items-center gap-2">{% block actions %}{% endblock %}</div>
+          </header>
+
           {% if messages %}
-            <div class="mb-4 flex flex-col gap-2">
+            <div class="mt-6 flex flex-col gap-2">
               {% for message in messages %}
-                <div class="rounded border border-slate-200 bg-white px-4 py-2 text-sm shadow-sm">
-                  {{ message }}
-                </div>
+                {# literal class strings per branch: Tailwind scans source text, not runtime values #}
+                {% if message.tags == 'error' %}
+                  <div class="rounded-md border border-red-200 bg-red-50 px-4 py-2.5 text-sm text-red-800">{{ message }}</div>
+                {% elif message.tags == 'warning' %}
+                  <div class="rounded-md border border-amber-200 bg-amber-50 px-4 py-2.5 text-sm text-amber-900">{{ message }}</div>
+                {% elif message.tags == 'success' %}
+                  <div class="rounded-md border border-accent/25 bg-accent-soft px-4 py-2.5 text-sm text-ink">{{ message }}</div>
+                {% else %}
+                  <div class="rounded-md border border-rule bg-card px-4 py-2.5 text-sm text-ink">{{ message }}</div>
+                {% endif %}
               {% endfor %}
             </div>
           {% endif %}
-          {% block content %}{% endblock %}
+
+          <div class="mt-8 pb-16">{% block content %}{% endblock %}</div>
         </div>
       </section>
     </div>

@@ -6,7 +6,41 @@ from google.auth.transport import requests as google_requests
 from google.oauth2 import id_token
 from rest_framework import serializers
 
+from syllabus.models import Subject
+
 User = get_user_model()
+
+
+class SubjectListSerializer(serializers.ModelSerializer):
+    category_label = serializers.CharField(source="get_category_display", read_only=True)
+
+    class Meta:
+        model = Subject
+        fields = ["slug", "title", "one_liner", "category", "category_label", "became_usable_on"]
+
+
+class SubjectDetailSerializer(serializers.ModelSerializer):
+    category_label = serializers.CharField(source="get_category_display", read_only=True)
+    what_you_can_build = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Subject
+        fields = [
+            "slug",
+            "title",
+            "one_liner",
+            "category",
+            "category_label",
+            "what_you_can_build",
+            "before_this",
+            "why_new",
+            "resource_url",
+            "source_url",
+            "became_usable_on",
+        ]
+
+    def get_what_you_can_build(self, obj):
+        return [line.strip() for line in obj.what_you_can_build.splitlines() if line.strip()]
 
 
 class UserSerializer(serializers.Serializer):

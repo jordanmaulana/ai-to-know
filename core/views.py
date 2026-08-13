@@ -1,22 +1,21 @@
-from django.contrib.auth.decorators import user_passes_test
-from django.contrib.auth.views import LoginView
-from django.shortcuts import render
-from django.utils.decorators import method_decorator
-from django.views import View
+from django.contrib.auth.views import LoginView, redirect_to_login
+from django.core.exceptions import PermissionDenied
 
 
-class SuperuserRequiredMixin(View):
-    @method_decorator(user_passes_test(lambda user: user.is_superuser, login_url="/login/"))
+class SuperuserRequiredMixin:
+    """Superuser-only pages.
+
+    Anonymous -> /login/?next=..., signed-in non-superuser -> 403. The 403 matters: sending an
+    already-authenticated user back to the login form just loops them through it again.
+    """
+
     def dispatch(self, request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return redirect_to_login(request.get_full_path(), "/login/")
+        if not request.user.is_superuser:
+            raise PermissionDenied
         return super().dispatch(request, *args, **kwargs)
 
 
 class AdminLoginView(LoginView):
     template_name = "registration/login.html"
-    success_url = "/dashboard/"
-
-
-class DashboardView(SuperuserRequiredMixin, View):
-    def get(self, request):
-        ctx = {}
-        return render(request, "dashboard.html", ctx)

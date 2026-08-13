@@ -21,6 +21,15 @@ mmg:
 migrate:
 	uv run manage.py migrate
 
+seed:
+	uv run manage.py seed_syllabus
+
+crawl:
+	uv run manage.py crawl_hn
+
+crawl-dry:
+	uv run manage.py crawl_hn --dry-run
+
 tw-run:
 	npx @tailwindcss/cli -i ./static/input.css -o ./static/output.css --watch
 

@@ -30,9 +30,10 @@ API modules live in `api/v1/{resource}_api.py`. Use class-based `from rest_frame
 - Endpoints: `api/v1/auth_api.py` — `POST /auth/google/`, `POST /auth/register/`, `POST /auth/login/` each return `{ token, user }`; `GET /auth/me/` rehydrates the user from the token; `POST /auth/logout/` deletes the token.
 - The user shape is `UserSerializer` in `api/v1/serializers.py` → `{ id, email, onboarded }`. Frontend mirror: `AuthUser` in `frontend/src/features/auth/types.ts`.
 - **Routing is centralized in `AuthGate`** (`frontend/src/features/auth/components/auth-gate.tsx`) — the single source of truth for redirects:
-  - No token + not on a public path (`/`, `/login`) → `/login`.
+  - No token + not on a public path (`/`, `/login`, `/subjects/*` — see `isPublicPath`) → `/login`.
   - Token + `!onboarded` → `/onboarding` (the opt-in gate; dormant by default).
-  - `onboarded` + on public/`/onboarding` → `/dashboard`.
+  - `onboarded` + on `/login` or `/onboarding` → `/dashboard`. Signed-in users are **not**
+    bounced off `/` or `/subjects/*`, because those are the public syllabus, not a placeholder.
 - **`onboarded` source of truth** = `get_onboarded` in `api/v1/serializers.py`. **It defaults to `True`** so a fresh template runs `login → dashboard` out of the box. The `/onboarding` page (`frontend/src/routes/onboarding.tsx`) is an optional placeholder and is unreachable while `onboarded` is always true.
 
 ### Enabling a real onboarding step
@@ -44,11 +45,40 @@ Previously the template trapped users in onboarding because `get_onboarded` read
 3. **Endpoint**: add a PATCH/POST in `api/v1/auth_api.py` (wired in the v1 urls) that fills the profile / flips the flag.
 4. **Frontend**: build the form in `frontend/src/routes/onboarding.tsx` to call that endpoint, then refetch `me()` so `AuthGate` redirects to `/dashboard`.
 
+## The syllabus (this project's actual product)
+
+A public list of AI capabilities. Every entry answers three questions: what it is, what you
+can make with it, and what you had to do before it existed. **Editorial bar: only add
+something that unlocks work which was impossible or wildly impractical before.** "Faster",
+"cheaper", "a nicer version of an existing tool", model releases, benchmarks, and funding
+news do not qualify.
+
+- **App**: `syllabus/` — `Subject` (an entry) and `CrawlCandidate` (every HN story already
+  looked at, keyed by `hn_id` so nothing is judged or paid for twice).
+- **Seed content**: `syllabus/seed_data.py`, loaded with `make seed` (idempotent;
+  `--reset` removes them). Hand-written subjects are published immediately.
+- **Crawler**: `make crawl` — pulls the Hacker News front page via the Algolia API,
+  drops anything off-topic or below the points floor for free, then spends one Claude call
+  per survivor to judge novelty against the existing subject index. Accepted stories become
+  **drafts**; nothing reaches the public site until someone publishes it in `/admin`.
+  `make crawl-dry` runs the prefilter only — no API calls, nothing written.
+- **Daily run** (host cron):
+  `0 8 * * * cd /path/to/repo && /usr/bin/make crawl >> /tmp/hn-crawl.log 2>&1`
+- **Review queue**: Django admin → Crawl candidates (filter by verdict) and Subjects
+  (filter status = draft, then the "Publish selected subjects" action).
+- **Public API**: `GET /api/v1/syllabus/subjects/` and `.../<slug>/` — `AllowAny`, published
+  only, supports `?category=` and `?q=`. Writes are admin-only by design.
+- **Frontend**: `/` is the syllabus itself (a chronological log grouped by year),
+  `/subjects/<slug>` is the detail page. Both are public — see `isPublicPath` in
+  `auth-gate.tsx`. Feature code lives in `frontend/src/features/syllabus/`.
+
 ## Dev commands (Makefile)
 
 - `make dev` — Django dev server on :8000.
 - `make web` — frontend dev server (`pnpm run dev`).
 - `make migrate` / `make mmg` — apply / make migrations.
+- `make seed` — load the hand-written syllabus subjects.
+- `make crawl` / `make crawl-dry` — Hacker News crawl (real / prefilter-only).
 - `make lint` — `ruff format` + `ruff check --fix`.
 - `make dock` — full docker compose stack.
 - Frontend build/typecheck: `cd frontend && pnpm run build`.

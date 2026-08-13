@@ -1,0 +1,8 @@
+{# Usage: {% include "_partials/status_pill.html" with status=subject.status label=subject.get_status_display %}
+   Branches carry complete literal class strings — Tailwind scans template text, so a class
+   built from a variable ("bg-{{ status }}-100") would never be generated. #}
+{% if status == 'published' %}
+  <span class="inline-flex items-center rounded-full border border-accent/25 bg-accent-soft px-2.5 py-0.5 font-mono text-[0.6875rem] tracking-widest text-accent uppercase">{{ label }}</span>
+{% else %}
+  <span class="inline-flex items-center rounded-full border border-rule bg-paper px-2.5 py-0.5 font-mono text-[0.6875rem] tracking-widest text-muted uppercase">{{ label }}</span>
+{% endif %}

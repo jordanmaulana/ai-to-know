@@ -1,0 +1,10 @@
+{# Usage: {% include "_partials/verdict_pill.html" with verdict=c.verdict label=c.get_verdict_display %} #}
+{% if verdict == 'accepted' %}
+  <span class="inline-flex items-center rounded-full border border-accent/25 bg-accent-soft px-2.5 py-0.5 font-mono text-[0.6875rem] tracking-widest text-accent uppercase">{{ label }}</span>
+{% elif verdict == 'duplicate' %}
+  <span class="inline-flex items-center rounded-full border border-amber-200 bg-amber-50 px-2.5 py-0.5 font-mono text-[0.6875rem] tracking-widest text-amber-800 uppercase">{{ label }}</span>
+{% elif verdict == 'rejected_llm' %}
+  <span class="inline-flex items-center rounded-full border border-red-200 bg-red-50 px-2.5 py-0.5 font-mono text-[0.6875rem] tracking-widest text-red-700 uppercase">{{ label }}</span>
+{% else %}
+  <span class="inline-flex items-center rounded-full border border-rule bg-paper px-2.5 py-0.5 font-mono text-[0.6875rem] tracking-widest text-muted uppercase">{{ label }}</span>
+{% endif %}

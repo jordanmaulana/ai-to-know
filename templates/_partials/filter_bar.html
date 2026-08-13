@@ -1,0 +1,49 @@
+{# Subjects filter bar. No JS, so filtering is an explicit GET submit.
+   There is deliberately no `page` input: changing a filter should land you on page 1. #}
+<form method="get" class="flex flex-wrap items-end gap-3 rounded-xl border border-rule bg-card p-4">
+  <label class="flex min-w-56 flex-1 flex-col gap-1.5">
+    <span class="font-mono text-[0.6875rem] tracking-widest text-muted uppercase">Search</span>
+    <span class="flex items-center gap-2 rounded-md border border-rule bg-paper px-3 py-2 focus-within:border-accent">
+      {% include "_partials/icon.html" with name="search" class="h-3.5 w-3.5 shrink-0 text-muted" %}
+      <input type="search" name="q" value="{{ q }}" placeholder="title, one-liner, or slug"
+             class="w-full min-w-0 bg-transparent text-sm text-ink placeholder:text-muted focus:outline-none" />
+    </span>
+  </label>
+
+  <label class="flex flex-col gap-1.5">
+    <span class="font-mono text-[0.6875rem] tracking-widest text-muted uppercase">Status</span>
+    <select name="status" class="rounded-md border border-rule bg-paper px-3 py-2 text-sm text-ink focus:border-accent focus:outline-none">
+      <option value="">Any</option>
+      {% for value, label in statuses %}
+        <option value="{{ value }}" {% if status == value %}selected{% endif %}>{{ label }}</option>
+      {% endfor %}
+    </select>
+  </label>
+
+  <label class="flex flex-col gap-1.5">
+    <span class="font-mono text-[0.6875rem] tracking-widest text-muted uppercase">Category</span>
+    <select name="category" class="rounded-md border border-rule bg-paper px-3 py-2 text-sm text-ink focus:border-accent focus:outline-none">
+      <option value="">Any</option>
+      {% for value, label in categories %}
+        <option value="{{ value }}" {% if category == value %}selected{% endif %}>{{ label }}</option>
+      {% endfor %}
+    </select>
+  </label>
+
+  <label class="flex flex-col gap-1.5">
+    <span class="font-mono text-[0.6875rem] tracking-widest text-muted uppercase">Sort</span>
+    <select name="sort" class="rounded-md border border-rule bg-paper px-3 py-2 text-sm text-ink focus:border-accent focus:outline-none">
+      {% for value, label in sorts %}
+        <option value="{{ value }}" {% if sort == value %}selected{% endif %}>{{ label }}</option>
+      {% endfor %}
+    </select>
+  </label>
+
+  <button type="submit"
+          class="rounded-md bg-ink px-4 py-2 font-mono text-[0.6875rem] tracking-widest text-paper uppercase transition hover:opacity-85">
+    Apply
+  </button>
+  {% if filtered %}
+    <a href="{% url 'cms:subjects' %}" class="py-2 text-sm text-muted underline underline-offset-4 hover:text-ink">Clear</a>
+  {% endif %}
+</form>

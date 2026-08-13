@@ -1,0 +1,33 @@
+export type CategorySlug =
+  | "build"
+  | "automate"
+  | "agents"
+  | "media"
+  | "interface"
+  | "infra";
+
+export interface Subject {
+  slug: string;
+  title: string;
+  one_liner: string;
+  category: CategorySlug;
+  category_label: string;
+  became_usable_on: string | null;
+}
+
+export interface SubjectDetail extends Subject {
+  what_you_can_build: string[];
+  before_this: string;
+  why_new: string;
+  resource_url: string;
+  source_url: string;
+}
+
+export const CATEGORIES: { slug: CategorySlug; label: string }[] = [
+  { slug: "build", label: "Build software" },
+  { slug: "automate", label: "Automate work" },
+  { slug: "agents", label: "Agents" },
+  { slug: "media", label: "Media" },
+  { slug: "interface", label: "Interfaces" },
+  { slug: "infra", label: "Infrastructure" },
+];

@@ -1,0 +1,123 @@
+{% extends "dashboard_base.html" %}
+{% load humanize %}
+
+{% block title %}Dashboard{% endblock %}
+{% block heading %}Dashboard{% endblock %}
+{% block subheading %}The syllabus at a glance, and what the crawler has been filing.{% endblock %}
+
+{% block actions %}
+  <a href="{% url 'cms:subject_new' %}"
+     class="flex items-center gap-2 rounded-md bg-ink px-4 py-2 font-mono text-[0.6875rem] tracking-widest text-paper uppercase transition hover:opacity-85">
+    {% include "_partials/icon.html" with name="plus" class="h-3.5 w-3.5" %}
+    New subject
+  </a>
+{% endblock %}
+
+{% block content %}
+  <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+    {% include "_partials/stat_card.html" with label="Subjects" value=totals.total note="everything, any status" href=None %}
+    {% include "_partials/stat_card.html" with label="Published" value=totals.published note="live on the public site" href="?"|add:"" %}
+    {% include "_partials/stat_card.html" with label="Drafts" value=totals.drafts note="waiting for review" href=None %}
+    {% include "_partials/stat_card.html" with label="Undated" value=totals.undated note="no became-usable date" href=None %}
+  </div>
+
+  <section class="mt-10">
+    <div class="flex items-baseline justify-between">
+      <h2 class="text-lg font-semibold tracking-tight">Drafts waiting for review</h2>
+      <a href="{% url 'cms:subjects' %}?status=draft" class="text-sm text-accent underline underline-offset-4">See all drafts</a>
+    </div>
+
+    {% if drafts %}
+      <div class="mt-4 overflow-hidden rounded-xl border border-rule bg-card">
+        <table class="w-full text-sm">
+          <tbody class="divide-y divide-rule">
+            {% for subject in drafts %}
+              <tr class="transition hover:bg-accent-soft/40">
+                <td class="px-4 py-3">
+                  <a href="{% url 'cms:subject_edit' slug=subject.slug %}" class="font-medium text-ink hover:text-accent">{{ subject.title }}</a>
+                  <div class="mt-0.5 text-xs text-muted">{{ subject.one_liner|truncatechars:90 }}</div>
+                </td>
+                <td class="px-4 py-3 text-right font-mono text-[0.6875rem] tracking-widest whitespace-nowrap text-muted uppercase">
+                  {{ subject.get_category_display }}
+                </td>
+                <td class="px-4 py-3 text-right text-xs whitespace-nowrap text-muted">
+                  filed {{ subject.created_on|naturaltime }}
+                </td>
+                <td class="px-4 py-3 text-right">
+                  <form method="post" action="{% url 'cms:subject_publish' slug=subject.slug %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="publish" />
+                    <input type="hidden" name="next" value="{{ request.get_full_path }}" />
+                    <button type="submit"
+                            class="rounded-md border border-rule px-3 py-1.5 font-mono text-[0.6875rem] tracking-widest text-muted uppercase transition hover:border-accent hover:text-accent">
+                      Publish
+                    </button>
+                  </form>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      {% include "_partials/empty_state.html" with message="No drafts. Everything the crawler filed has been dealt with." action_url=None %}
+    {% endif %}
+  </section>
+
+  <div class="mt-10 grid gap-6 lg:grid-cols-2">
+    <section>
+      <h2 class="text-lg font-semibold tracking-tight">By category</h2>
+      <div class="mt-4 overflow-hidden rounded-xl border border-rule bg-card">
+        <table class="w-full text-sm">
+          <tbody class="divide-y divide-rule">
+            {% for row in by_category %}
+              <tr>
+                <td class="px-4 py-2.5">
+                  <a href="{% url 'cms:subjects' %}?category={{ row.value }}" class="text-ink hover:text-accent">{{ row.label }}</a>
+                </td>
+                <td class="px-4 py-2.5 text-right text-xs tabular-nums text-muted">
+                  {{ row.published }} published · {{ row.total }} total
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section>
+      <div class="flex items-baseline justify-between">
+        <h2 class="text-lg font-semibold tracking-tight">Crawler, last {{ crawl.window_hours }}h</h2>
+        <a href="{% url 'cms:queue' %}" class="text-sm text-accent underline underline-offset-4">Review queue</a>
+      </div>
+      <div class="mt-4 rounded-xl border border-rule bg-card p-5">
+        <div class="grid grid-cols-2 gap-4 sm:grid-cols-5">
+          <div><div class="font-mono text-[0.6875rem] tracking-widest text-muted uppercase">Seen</div><div class="mt-1 text-xl font-semibold tabular-nums">{{ crawl.seen }}</div></div>
+          <div><div class="font-mono text-[0.6875rem] tracking-widest text-muted uppercase">Accepted</div><div class="mt-1 text-xl font-semibold tabular-nums text-accent">{{ crawl.accepted }}</div></div>
+          <div><div class="font-mono text-[0.6875rem] tracking-widest text-muted uppercase">Rejected</div><div class="mt-1 text-xl font-semibold tabular-nums">{{ crawl.rejected }}</div></div>
+          <div><div class="font-mono text-[0.6875rem] tracking-widest text-muted uppercase">Duplicate</div><div class="mt-1 text-xl font-semibold tabular-nums">{{ crawl.duplicate }}</div></div>
+          <div><div class="font-mono text-[0.6875rem] tracking-widest text-muted uppercase">Skipped</div><div class="mt-1 text-xl font-semibold tabular-nums">{{ crawl.skipped }}</div></div>
+        </div>
+        <p class="mt-4 border-t border-rule pt-3 text-xs text-muted">
+          {% if crawl.last_seen %}
+            Last candidate recorded {{ crawl.last_seen|naturaltime }}.
+          {% else %}
+            Nothing recorded yet — run <code class="font-mono">make crawl</code>.
+          {% endif %}
+        </p>
+      </div>
+
+      {% if candidates %}
+        <ul class="mt-4 divide-y divide-rule rounded-xl border border-rule bg-card">
+          {% for candidate in candidates %}
+            <li class="flex items-start gap-3 px-4 py-2.5 text-sm">
+              <span class="w-10 shrink-0 text-right font-mono text-xs tabular-nums text-muted">{{ candidate.points }}</span>
+              <a href="{{ candidate.hn_url }}" target="_blank" rel="noreferrer" class="min-w-0 flex-1 truncate text-ink hover:text-accent">{{ candidate.hn_title }}</a>
+              {% include "_partials/verdict_pill.html" with verdict=candidate.verdict label=candidate.get_verdict_display %}
+            </li>
+          {% endfor %}
+        </ul>
+      {% endif %}
+    </section>
+  </div>
+{% endblock %}

@@ -1,11 +1,25 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "@fontsource-variable/geist";
+@import "@fontsource-variable/geist-mono";
+@import "@fontsource-variable/bricolage-grotesque";
 
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
   --font-sans: "Geist Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "Geist Mono Variable", ui-monospace, SFMono-Regular, monospace;
+  --font-display: "Bricolage Grotesque Variable", "Geist Variable", sans-serif;
+
+  /* Mineral paper + cold ink. One flat indigo marks the moment something became possible. */
+  --color-paper: hsl(150 9% 94%);
+  --color-card: hsl(0 0% 100%);
+  --color-ink: hsl(160 18% 7%);
+  --color-muted: hsl(165 7% 38%);
+  --color-rule: hsl(155 10% 85%);
+  --color-accent: hsl(249 65% 50%);
+  --color-accent-soft: hsl(249 60% 96%);
+
   --color-background: hsl(0 0% 100%);
   --color-foreground: hsl(0 0% 9%);
   --radius: 0.625rem;
@@ -19,4 +33,19 @@ body {
   font-family: var(--font-sans);
   background: var(--color-background);
   color: var(--color-foreground);
+}
+
+::selection {
+  background: var(--color-accent);
+  color: white;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  @keyframes rise {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: none; }
+  }
+  .rise {
+    animation: rise 420ms cubic-bezier(0.2, 0.7, 0.3, 1) both;
+  }
 }
