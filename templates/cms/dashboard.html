@@ -14,11 +14,12 @@
 {% endblock %}
 
 {% block content %}
+  {% url 'cms:subjects' as subjects_url %}
   <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-    {% include "_partials/stat_card.html" with label="Subjects" value=totals.total note="everything, any status" href=None %}
-    {% include "_partials/stat_card.html" with label="Published" value=totals.published note="live on the public site" href="?"|add:"" %}
-    {% include "_partials/stat_card.html" with label="Drafts" value=totals.drafts note="waiting for review" href=None %}
-    {% include "_partials/stat_card.html" with label="Undated" value=totals.undated note="no became-usable date" href=None %}
+    {% include "_partials/stat_card.html" with label="Subjects" value=totals.total note="everything, any status" href=subjects_url %}
+    {% include "_partials/stat_card.html" with label="Published" value=totals.published note="live on the public site" href=subjects_url|add:"?status=published" %}
+    {% include "_partials/stat_card.html" with label="Drafts" value=totals.drafts note="waiting for review" href=subjects_url|add:"?status=draft" %}
+    {% include "_partials/stat_card.html" with label="Undated" value=totals.undated note="no became-usable date" href=subjects_url|add:"?sort=usable" %}
   </div>
 
   <section class="mt-10">
@@ -60,7 +61,7 @@
         </table>
       </div>
     {% else %}
-      {% include "_partials/empty_state.html" with message="No drafts. Everything the crawler filed has been dealt with." action_url=None %}
+      {% include "_partials/empty_state.html" with message="No drafts. Everything the crawler filed has been dealt with." %}
     {% endif %}
   </section>
 

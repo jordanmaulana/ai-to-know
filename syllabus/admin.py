@@ -32,8 +32,14 @@ class SubjectAdmin(admin.ModelAdmin):
 
     @admin.action(description="Move selected subjects back to draft")
     def unpublish_subjects(self, request, queryset):
-        updated = queryset.update(status=Status.DRAFT)
-        self.message_user(request, f"Moved {updated} subject(s) back to draft.")
+        # Row-by-row, not queryset.update(): update() skips auto_now, which would leave
+        # updated_on stale and make the CMS "edited" column lie.
+        count = 0
+        for subject in queryset:
+            subject.status = Status.DRAFT
+            subject.save(update_fields=["status", "updated_on"])
+            count += 1
+        self.message_user(request, f"Moved {count} subject(s) back to draft.")
 
 
 @admin.register(CrawlCandidate)

@@ -10,7 +10,9 @@ fi
 
 if [ "${ROLE:-web}" = "web" ]; then
   uv run manage.py migrate --noinput
-  uv run manage.py collectstatic --noinput
+  # input.css is the Tailwind source, not a served asset: its @import "tailwindcss" is not a
+  # real URL, and the manifest storage fails the whole collect trying to resolve it.
+  uv run manage.py collectstatic --noinput --ignore=input.css
 fi
 
 exec "$@"

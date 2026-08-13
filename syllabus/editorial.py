@@ -5,9 +5,7 @@ Read by two consumers: `cms/editorial.html` (the human reference at /dashboard/e
 context; this file is what actually runs.
 """
 
-BAR = (
-    "Only add something that unlocks work which was impossible or wildly impractical before."
-)
+BAR = "Only add something that unlocks work which was impossible or wildly impractical before."
 
 THREE_QUESTIONS = [
     ("What is it?", "One plain sentence. No hype, no marketing voice, no exclamation marks."),

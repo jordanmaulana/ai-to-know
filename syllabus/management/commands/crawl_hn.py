@@ -129,6 +129,7 @@ SUBJECT_SCHEMA = {
     "additionalProperties": False,
 }
 
+
 class Command(BaseCommand):
     help = "Crawl Hacker News for genuinely new AI subjects and file them as drafts."
 
@@ -193,7 +194,7 @@ class Command(BaseCommand):
         self.stdout.write(
             self.style.SUCCESS(
                 f"fetched {len(stories)}, filtered out {len(skipped)}, judged {len(batch)}, "
-                f"accepted {accepted} (as drafts — review them at /dashboard/subjects/?status=draft)"
+                f"accepted {accepted} (drafts — review at /dashboard/subjects/?status=draft)"
             )
         )
 

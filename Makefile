@@ -36,6 +36,15 @@ tw-run:
 tw-build:
 	npx @tailwindcss/cli -i ./static/input.css -o ./static/output.css
 
+# Prod static: output.css must exist before collectstatic, or the manifest storage turns
+# {% static 'output.css' %} into a 500 instead of a missing file.
+build-static:
+	npx @tailwindcss/cli -i ./static/input.css -o ./static/output.css --minify
+	uv run manage.py collectstatic --noinput --ignore=input.css
+
+test:
+	uv run manage.py test
+
 web:
 	cd frontend && pnpm run dev
 

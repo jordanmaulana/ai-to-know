@@ -53,6 +53,10 @@ something that unlocks work which was impossible or wildly impractical before.**
 "cheaper", "a nicer version of an existing tool", model releases, benchmarks, and funding
 news do not qualify.
 
+The bar above is a paraphrase. The copy that actually runs lives in `syllabus/editorial.py` —
+rendered for humans at `/dashboard/editorial/` and used verbatim as the crawler's rubric in
+`crawl_hn.py`. Change it there, not here.
+
 - **App**: `syllabus/` — `Subject` (an entry) and `CrawlCandidate` (every HN story already
   looked at, keyed by `hn_id` so nothing is judged or paid for twice).
 - **Seed content**: `syllabus/seed_data.py`, loaded with `make seed` (idempotent;
@@ -60,17 +64,47 @@ news do not qualify.
 - **Crawler**: `make crawl` — pulls the Hacker News front page via the Algolia API,
   drops anything off-topic or below the points floor for free, then spends one Claude call
   per survivor to judge novelty against the existing subject index. Accepted stories become
-  **drafts**; nothing reaches the public site until someone publishes it in `/admin`.
+  **drafts**; nothing reaches the public site until someone publishes it in the CMS.
   `make crawl-dry` runs the prefilter only — no API calls, nothing written.
 - **Daily run** (host cron):
   `0 8 * * * cd /path/to/repo && /usr/bin/make crawl >> /tmp/hn-crawl.log 2>&1`
-- **Review queue**: Django admin → Crawl candidates (filter by verdict) and Subjects
-  (filter status = draft, then the "Publish selected subjects" action).
+- **CMS** (superuser only, server-rendered Django templates — see below): `/dashboard/` stats,
+  `/dashboard/subjects/?status=draft` the review queue for drafts, `/dashboard/queue/` every
+  HN story the crawler judged, `/dashboard/editorial/` the rules. `/admin/` stays wired as the
+  escape hatch.
 - **Public API**: `GET /api/v1/syllabus/subjects/` and `.../<slug>/` — `AllowAny`, published
   only, supports `?category=` and `?q=`. Writes are admin-only by design.
 - **Frontend**: `/` is the syllabus itself (a chronological log grouped by year),
   `/subjects/<slug>` is the detail page. Both are public — see `isPublicPath` in
   `auth-gate.tsx`. Feature code lives in `frontend/src/features/syllabus/`.
+
+## The CMS (Django templates — editors only, never the public site)
+
+Server-rendered pages under `/dashboard/`, gated by `SuperuserRequiredMixin` (`core/views.py`:
+anonymous → `/login/?next=`, signed-in non-superuser → 403). **The public site is the React SPA
+— do not server-render `/` or `/subjects/<slug>`.** Session auth here is separate from the
+token auth the SPA uses.
+
+- **Views**: `syllabus/views.py` (plain `View` subclasses + `Paginator`, matching repo style),
+  routed in `syllabus/urls.py` under `app_name = "cms"`, included from `core/urls.py` at
+  `dashboard/`. Query logic lives in `syllabus/selectors.py`, the form in `syllabus/forms.py`.
+- **No JavaScript.** Filters, search and pagination are plain `GET` querystrings; the
+  pagination partial uses Django's built-in `{% querystring %}` so filters survive page links.
+  Consequence: there is no live slug-as-you-type — a blank slug is slugified server-side on
+  save, matching `crawl_hn.create_draft`'s `-N` dedupe.
+- **Publish/unpublish is its own POST endpoint**, not a form field, so `Subject.publish()`'s
+  stamp-`published_on`-once semantics can't be bypassed. Unpublish uses
+  `save(update_fields=["status", "updated_on"])` — `queryset.update()` would skip `auto_now`.
+- **Templates all live in root `templates/`** (`templates/cms/*`, shared bits in
+  `templates/_partials/*`) — the Dockerfile's tailwind stage copies only `static/` and
+  `templates/`, so an app-level template dir would ship unstyled. Multi-line template comments
+  must use `{% comment %}`: `{# … #}` only matches on one line, so a `{% include %}` inside a
+  multi-line `{# #}` becomes a real tag and self-includes.
+- **Styling**: `static/input.css` (Tailwind v4 `@theme`) mirrors the tokens in
+  `frontend/src/styles.css` — two build pipelines, so a token change is a two-file change.
+  Classes must be complete literal strings in the template; anything assembled from a variable
+  is never generated. Run `make tw-build` (or `make tw-run`) before the pages render styled;
+  `npm install` once at the repo root first.
 
 ## Dev commands (Makefile)
 
@@ -79,6 +113,10 @@ news do not qualify.
 - `make migrate` / `make mmg` — apply / make migrations.
 - `make seed` — load the hand-written syllabus subjects.
 - `make crawl` / `make crawl-dry` — Hacker News crawl (real / prefilter-only).
+- `make tw-build` / `make tw-run` — build / watch `static/output.css` for the CMS templates.
+- `make build-static` — prod static: minified CSS then `collectstatic` (manifest storage turns
+  a missing `output.css` into a 500, so the order matters).
+- `make test` — `manage.py test` (CMS coverage lives in `syllabus/tests.py`).
 - `make lint` — `ruff format` + `ruff check --fix`.
 - `make dock` — full docker compose stack.
 - Frontend build/typecheck: `cd frontend && pnpm run build`.

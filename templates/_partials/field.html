@@ -1,5 +1,7 @@
-{# One form field. Usage: {% include "_partials/field.html" with field=form.title %}
-   Widget classes come from SubjectForm.Meta.widgets, so nothing is injected here. #}
+{% comment %}
+One form field. Include this file with field=form.<name>.
+Widget classes come from SubjectForm.Meta.widgets, so nothing is injected here.
+{% endcomment %}
 <label class="flex flex-col gap-1.5">
   <span class="text-sm font-medium text-ink">
     {{ field.label }}{% if field.field.required %}<span class="text-red-600" aria-hidden> *</span>{% endif %}

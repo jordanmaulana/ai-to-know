@@ -1,0 +1,131 @@
+{% extends "dashboard_base.html" %}
+{% load humanize %}
+
+{% block title %}{% if subject %}{{ subject.title }}{% else %}New subject{% endif %}{% endblock %}
+{% block heading %}{% if subject %}Edit subject{% else %}New subject{% endif %}{% endblock %}
+{% block subheading %}
+  {% if subject %}
+    Live at <span class="font-mono">/subjects/{{ subject.slug }}</span> once published.
+  {% else %}
+    What it is, what you can make with it, and what you had to do before it existed.
+  {% endif %}
+{% endblock %}
+
+{% block actions %}
+  <a href="{% url 'cms:subjects' %}" class="flex items-center gap-2 py-2 text-sm text-muted transition hover:text-ink">
+    {% include "_partials/icon.html" with name="arrow-left" class="h-3.5 w-3.5" %}
+    All subjects
+  </a>
+  {% if subject %}
+    <a href="/admin/syllabus/subject/{{ subject.pk }}/change/"
+       class="flex items-center gap-2 rounded-md border border-rule px-3 py-2 font-mono text-[0.6875rem] tracking-widest text-muted uppercase transition hover:text-ink">
+      Open in admin
+      {% include "_partials/icon.html" with name="arrow-up-right" class="h-3.5 w-3.5" %}
+    </a>
+  {% endif %}
+{% endblock %}
+
+{% block content %}
+  {% if subject %}
+    {% comment %}
+    A separate form element: HTML forbids nesting, and publishing must not depend on the edit
+    form validating. Sits above the fields so status is the first thing you see.
+    {% endcomment %}
+    <div class="mb-6 flex flex-wrap items-center justify-between gap-4 rounded-xl border border-rule bg-card p-4">
+      <div class="flex items-center gap-3">
+        {% include "_partials/status_pill.html" with status=subject.status label=subject.get_status_display %}
+        <span class="text-sm text-muted">
+          {% if subject.published_on %}
+            First published {{ subject.published_on|naturaltime }}.
+          {% else %}
+            Never published.
+          {% endif %}
+        </span>
+      </div>
+      <div class="flex items-center gap-2">
+        {% if subject.status == 'published' %}
+          <a href="{{ public_url }}" target="_blank" rel="noreferrer"
+             class="flex items-center gap-2 rounded-md border border-rule px-3 py-2 font-mono text-[0.6875rem] tracking-widest text-muted uppercase transition hover:text-ink">
+            View on site
+            {% include "_partials/icon.html" with name="arrow-up-right" class="h-3.5 w-3.5" %}
+          </a>
+        {% endif %}
+        <form method="post" action="{% url 'cms:subject_publish' slug=subject.slug %}">
+          {% csrf_token %}
+          {% if subject.status == 'published' %}
+            <button type="submit" name="action" value="unpublish"
+                    class="flex items-center gap-2 rounded-md border border-rule px-4 py-2 font-mono text-[0.6875rem] tracking-widest text-muted uppercase transition hover:border-red-300 hover:text-red-700">
+              {% include "_partials/icon.html" with name="eye-off" class="h-3.5 w-3.5" %}
+              Unpublish
+            </button>
+          {% else %}
+            <button type="submit" name="action" value="publish"
+                    class="flex items-center gap-2 rounded-md bg-accent px-4 py-2 font-mono text-[0.6875rem] tracking-widest text-white uppercase transition hover:opacity-85">
+              {% include "_partials/icon.html" with name="check" class="h-3.5 w-3.5" %}
+              Publish
+            </button>
+          {% endif %}
+        </form>
+      </div>
+    </div>
+  {% endif %}
+
+  <form method="post" class="flex flex-col gap-6">
+    {% csrf_token %}
+
+    {% if form.non_field_errors %}
+      <div class="rounded-md border border-red-200 bg-red-50 px-4 py-2.5 text-sm text-red-800">
+        {{ form.non_field_errors }}
+      </div>
+    {% endif %}
+
+    <section class="rounded-xl border border-rule bg-card p-6">
+      <h2 class="font-mono text-[0.6875rem] tracking-widest text-muted uppercase">Identity</h2>
+      <div class="mt-4 grid gap-5 sm:grid-cols-2">
+        {% include "_partials/field.html" with field=form.title %}
+        {% include "_partials/field.html" with field=form.slug %}
+        {% include "_partials/field.html" with field=form.category %}
+        {% include "_partials/field.html" with field=form.became_usable_on %}
+      </div>
+    </section>
+
+    <section class="rounded-xl border border-rule bg-card p-6">
+      <h2 class="font-mono text-[0.6875rem] tracking-widest text-muted uppercase">The three questions</h2>
+      <p class="mt-1 text-xs text-muted">
+        The bar: it has to unlock work that was impossible or wildly impractical before.
+        <a href="{% url 'cms:editorial' %}" class="text-accent underline underline-offset-4">The rules</a>.
+      </p>
+      <div class="mt-4 flex flex-col gap-5">
+        {% include "_partials/field.html" with field=form.one_liner %}
+        {% include "_partials/field.html" with field=form.what_you_can_build %}
+        {% include "_partials/field.html" with field=form.before_this %}
+        {% include "_partials/field.html" with field=form.why_new %}
+      </div>
+    </section>
+
+    <section class="rounded-xl border border-rule bg-card p-6">
+      <h2 class="font-mono text-[0.6875rem] tracking-widest text-muted uppercase">Links</h2>
+      <div class="mt-4 grid gap-5 sm:grid-cols-2">
+        {% include "_partials/field.html" with field=form.resource_url %}
+        {% include "_partials/field.html" with field=form.source_url %}
+      </div>
+    </section>
+
+    <div class="flex flex-wrap items-center gap-4">
+      <button type="submit"
+              class="rounded-md bg-ink px-5 py-2.5 font-mono text-[0.6875rem] tracking-widest text-paper uppercase transition hover:opacity-85">
+        {% if subject %}Save changes{% else %}Create subject{% endif %}
+      </button>
+      <a href="{% url 'cms:subjects' %}" class="text-sm text-muted underline underline-offset-4 hover:text-ink">Cancel</a>
+      {% if not subject %}
+        <span class="text-xs text-muted">Saved as a draft — publish it once it reads right.</span>
+      {% endif %}
+    </div>
+  </form>
+
+  {% if subject %}
+    <p class="mt-8 border-t border-rule pt-4 font-mono text-[0.6875rem] tracking-widest text-muted uppercase">
+      Created {{ subject.created_on|naturaltime }} · edited {{ subject.updated_on|naturaltime }}{% if subject.actor %} by {{ subject.actor.email|default:subject.actor.username }}{% endif %}
+    </p>
+  {% endif %}
+{% endblock %}

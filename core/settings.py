@@ -120,9 +120,18 @@ STATIC_URL = "static/"
 STATICFILES_DIRS = [BASE_DIR / "static"]
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
+# Manifest storage only in production. It resolves {% static %} through staticfiles.json, so
+# under DEBUG (and in tests, which never run collectstatic) it would raise "Missing staticfiles
+# manifest entry for 'output.css'" instead of serving the file the dev server just built.
 STORAGES = {
     "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
-    "staticfiles": {"BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage"},
+    "staticfiles": {
+        "BACKEND": (
+            "django.contrib.staticfiles.storage.StaticFilesStorage"
+            if DEBUG
+            else "whitenoise.storage.CompressedManifestStaticFilesStorage"
+        )
+    },
 }
 
 LOGIN_URL = "/login/"

@@ -62,9 +62,7 @@ class SubjectListView(SuperuserRequiredMixin, View):
 
         # "id" is the tiebreak: without it, equal sort keys shuffle rows between pages.
         if sort == "usable":
-            subjects = subjects.order_by(
-                F("became_usable_on").desc(nulls_last=True), "title", "id"
-            )
+            subjects = subjects.order_by(F("became_usable_on").desc(nulls_last=True), "title", "id")
         elif sort == "title":
             subjects = subjects.order_by("title", "id")
         else:
@@ -116,9 +114,7 @@ class SubjectFormView(SuperuserRequiredMixin, View):
             {
                 "form": form,
                 "subject": subject,
-                "public_url": f"{settings.FRONTEND_URL}/subjects/{subject.slug}"
-                if subject
-                else "",
+                "public_url": f"{settings.FRONTEND_URL}/subjects/{subject.slug}" if subject else "",
             },
         )
 
@@ -162,9 +158,7 @@ class QueueView(SuperuserRequiredMixin, View):
         verdict = request.GET.get("verdict") or ""
         q = (request.GET.get("q") or "").strip()
 
-        candidates = CrawlCandidate.objects.select_related("subject").order_by(
-            "-created_on", "id"
-        )
+        candidates = CrawlCandidate.objects.select_related("subject").order_by("-created_on", "id")
         if verdict in Verdict.values:
             candidates = candidates.filter(verdict=verdict)
         if q:

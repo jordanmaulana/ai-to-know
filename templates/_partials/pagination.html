@@ -1,5 +1,7 @@
-{# {% querystring %} (Django 5.1+) copies the current query string and replaces one key, so
-   filters and search survive a page change without a custom template tag. #}
+{% comment %}
+The querystring tag (Django 5.1+) copies the current query string and replaces one key, so
+filters and search survive a page change without a custom template tag.
+{% endcomment %}
 {% if page_obj.paginator.count %}
   <nav class="mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-rule pt-4 text-sm">
     {% if page_obj.has_previous %}

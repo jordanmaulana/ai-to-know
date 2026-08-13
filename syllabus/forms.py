@@ -6,7 +6,8 @@ from syllabus.models import Subject
 # No widget_tweaks in this project, so the Tailwind classes live with the widgets.
 INPUT = (
     "w-full rounded-md border border-rule bg-card px-3 py-2 text-sm text-ink "
-    "placeholder:text-muted focus:border-accent focus:ring-2 focus:ring-accent/20 focus:outline-none"
+    "placeholder:text-muted focus:border-accent focus:ring-2 focus:ring-accent/20 "
+    "focus:outline-none"
 )
 AREA = INPUT + " min-h-28 leading-relaxed"
 

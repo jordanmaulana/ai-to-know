@@ -1,0 +1,82 @@
+{% extends "dashboard_base.html" %}
+{% load humanize %}
+
+{% block title %}Subjects{% endblock %}
+{% block heading %}Subjects{% endblock %}
+{% block subheading %}{{ page_obj.paginator.count }} row{{ page_obj.paginator.count|pluralize }} matching. Publishing puts an entry on the public site immediately.{% endblock %}
+
+{% block actions %}
+  <a href="{% url 'cms:subject_new' %}"
+     class="flex items-center gap-2 rounded-md bg-ink px-4 py-2 font-mono text-[0.6875rem] tracking-widest text-paper uppercase transition hover:opacity-85">
+    {% include "_partials/icon.html" with name="plus" class="h-3.5 w-3.5" %}
+    New subject
+  </a>
+{% endblock %}
+
+{% block content %}
+  {% include "_partials/filter_bar.html" %}
+
+  {% if page_obj.object_list %}
+    <div class="mt-6 overflow-hidden rounded-xl border border-rule bg-card">
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="border-b border-rule text-left font-mono text-[0.6875rem] tracking-widest text-muted uppercase">
+            <th class="px-4 py-3 font-normal">Subject</th>
+            <th class="px-4 py-3 font-normal">Category</th>
+            <th class="px-4 py-3 font-normal">Status</th>
+            <th class="px-4 py-3 font-normal">Edited</th>
+            <th class="px-4 py-3 font-normal"><span class="sr-only">Actions</span></th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-rule">
+          {% for subject in page_obj.object_list %}
+            <tr class="align-top transition hover:bg-accent-soft/40">
+              <td class="px-4 py-3">
+                <a href="{% url 'cms:subject_edit' slug=subject.slug %}" class="font-medium text-ink hover:text-accent">{{ subject.title }}</a>
+                <div class="mt-0.5 text-xs text-muted">{{ subject.one_liner|truncatechars:100 }}</div>
+                <div class="mt-1 font-mono text-[0.6875rem] text-muted/70">/{{ subject.slug }}</div>
+              </td>
+              <td class="px-4 py-3 font-mono text-[0.6875rem] tracking-widest whitespace-nowrap text-muted uppercase">
+                {{ subject.get_category_display }}
+              </td>
+              <td class="px-4 py-3">
+                {% include "_partials/status_pill.html" with status=subject.status label=subject.get_status_display %}
+              </td>
+              <td class="px-4 py-3 text-xs whitespace-nowrap text-muted">{{ subject.updated_on|naturaltime }}</td>
+              <td class="px-4 py-3 text-right">
+                {# next= brings you back to this exact filtered page; the view checks it is ours #}
+                <form method="post" action="{% url 'cms:subject_publish' slug=subject.slug %}">
+                  {% csrf_token %}
+                  <input type="hidden" name="next" value="{{ request.get_full_path }}" />
+                  {% if subject.status == 'published' %}
+                    <button type="submit" name="action" value="unpublish"
+                            class="rounded-md border border-rule px-3 py-1.5 font-mono text-[0.6875rem] tracking-widest whitespace-nowrap text-muted uppercase transition hover:border-red-300 hover:text-red-700">
+                      Unpublish
+                    </button>
+                  {% else %}
+                    <button type="submit" name="action" value="publish"
+                            class="rounded-md border border-rule px-3 py-1.5 font-mono text-[0.6875rem] tracking-widest whitespace-nowrap text-muted uppercase transition hover:border-accent hover:text-accent">
+                      Publish
+                    </button>
+                  {% endif %}
+                </form>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    {% include "_partials/pagination.html" %}
+  {% else %}
+    <div class="mt-6">
+      {% if filtered %}
+        {% url 'cms:subjects' as clear_url %}
+        {% include "_partials/empty_state.html" with message="Nothing matches that." action_url=clear_url action_label="Clear the filters" %}
+      {% else %}
+        {% url 'cms:subject_new' as new_url %}
+        {% include "_partials/empty_state.html" with message="No subjects yet. Run make seed, or write the first one." action_url=new_url action_label="New subject" %}
+      {% endif %}
+    </div>
+  {% endif %}
+{% endblock %}
