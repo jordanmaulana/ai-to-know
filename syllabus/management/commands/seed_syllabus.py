@@ -34,10 +34,14 @@ class Command(BaseCommand):
             usable_on = payload.pop("became_usable_on", None)
             payload["became_usable_on"] = date.fromisoformat(usable_on) if usable_on else None
             payload["status"] = Status.PUBLISHED
-            payload["published_on"] = now
 
-            subject, was_created = Subject.objects.update_or_create(slug=slug, defaults=payload)
-            # Keep the original publish date on re-runs.
+            # published_on lives in create_defaults only, so re-running the seeder to pick up
+            # edited copy does not restamp rows that were published months ago.
+            subject, was_created = Subject.objects.update_or_create(
+                slug=slug,
+                defaults=payload,
+                create_defaults={**payload, "published_on": now},
+            )
             if not was_created:
                 updated += 1
             else:

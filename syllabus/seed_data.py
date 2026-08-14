@@ -12,7 +12,13 @@ SUBJECTS = [
         "title": "RAG — Retrieval-Augmented Generation",
         "category": "build",
         "became_usable_on": "2023-03-01",
+        "date_note": (
+            "No launch day — the technique is from a 2020 paper. Dated to the cheap chat API "
+            "that made it practical; LangChain's first release (Oct 2022) is an equally fair "
+            "anchor."
+        ),
         "resource_url": "https://www.anthropic.com/news/contextual-retrieval",
+        "source_url": "https://openai.com/index/introducing-chatgpt-and-whisper-apis/",
         "one_liner": (
             "Give a language model your own documents at question time, so it answers "
             "from your material instead of from what it memorised during training."
@@ -42,6 +48,10 @@ SUBJECTS = [
         "category": "build",
         "became_usable_on": "2022-06-21",
         "resource_url": "https://code.claude.com/docs",
+        "source_url": (
+            "https://github.blog/news-insights/product-news/"
+            "github-copilot-is-generally-available-to-all-developers/"
+        ),
         "one_liner": (
             "An editor that writes the next few lines for you and answers questions about "
             "the code in front of you."
@@ -70,6 +80,7 @@ SUBJECTS = [
         "category": "agents",
         "became_usable_on": "2025-02-24",
         "resource_url": "https://code.claude.com/docs",
+        "source_url": "https://www.anthropic.com/news/claude-3-7-sonnet",
         "one_liner": (
             "A model that works in your actual repository — reads files, edits them, runs "
             "the tests, and fixes what it broke — instead of handing you a snippet."
@@ -98,6 +109,7 @@ SUBJECTS = [
         "category": "infra",
         "became_usable_on": "2024-11-25",
         "resource_url": "https://modelcontextprotocol.io",
+        "source_url": "https://www.anthropic.com/news/model-context-protocol",
         "one_liner": (
             "A standard plug shape for connecting AI assistants to tools and data — one "
             "connector per service, usable by any assistant that speaks it."
@@ -128,6 +140,7 @@ SUBJECTS = [
         "category": "agents",
         "became_usable_on": "2023-06-13",
         "resource_url": "https://platform.claude.com/docs/en/agents-and-tools/tool-use/overview",
+        "source_url": "https://openai.com/index/function-calling-and-other-api-updates/",
         "one_liner": (
             "You describe the functions a model is allowed to call; it decides when to call "
             "them and what to pass in, then uses the result."
@@ -154,6 +167,7 @@ SUBJECTS = [
         "category": "build",
         "became_usable_on": "2024-08-06",
         "resource_url": "https://platform.claude.com/docs/en/build-with-claude/structured-outputs",
+        "source_url": "https://openai.com/index/introducing-structured-outputs-in-the-api/",
         "one_liner": (
             "Hand the model a schema and get back JSON that always matches it — no parsing, "
             "no retries, no cleanup."
@@ -181,6 +195,7 @@ SUBJECTS = [
         "category": "build",
         "became_usable_on": "2022-12-15",
         "resource_url": "https://platform.claude.com/docs/en/build-with-claude/embeddings",
+        "source_url": "https://openai.com/index/new-and-improved-embedding-model/",
         "one_liner": (
             "Turn text, images, or audio into coordinates, so things that mean the same "
             "thing land near each other — searchable by meaning rather than by wording."
@@ -206,8 +221,13 @@ SUBJECTS = [
         "slug": "n8n-ai-automation",
         "title": "AI in workflow automation (n8n, Make, Zapier)",
         "category": "automate",
-        "became_usable_on": "2023-05-01",
+        "became_usable_on": "2023-12-01",
+        "date_note": (
+            "Three vendors, no shared date. Dated to n8n's LangChain nodes (1.19.4); "
+            "Zapier's AI Actions landed 6 Nov 2023."
+        ),
         "resource_url": "https://n8n.io",
+        "source_url": "https://github.com/n8n-io/n8n/releases/tag/n8n%401.19.4",
         "one_liner": (
             "Drag-and-drop automation tools with a language model as one of the boxes, so "
             "steps that need judgement stop needing a person."
@@ -236,6 +256,7 @@ SUBJECTS = [
         "category": "interface",
         "became_usable_on": "2022-09-21",
         "resource_url": "https://github.com/openai/whisper",
+        "source_url": "https://openai.com/index/whisper/",
         "one_liner": (
             "Accurate transcription of ordinary speech — accents, background noise, "
             "multiple languages — cheap enough to run on everything you record."
@@ -261,8 +282,15 @@ SUBJECTS = [
         "slug": "voice-cloning-tts",
         "title": "Natural text-to-speech and voice cloning",
         "category": "media",
-        "became_usable_on": "2023-06-01",
+        "became_usable_on": "2023-01-23",
+        "date_note": (
+            "ElevenLabs opened its public beta on this date; it left beta on 22 Aug 2023."
+        ),
         "resource_url": "https://elevenlabs.io",
+        "source_url": (
+            "https://elevenlabs.io/blog/elevenlabs-comes-out-of-beta-and-releases-"
+            "eleven-multilingual-v2-a-foundational-ai-speech-model-for-nearly-30-languages"
+        ),
         "one_liner": (
             "Speech synthesis that sounds like a person rather than a robot, in any voice "
             "you have a short sample of."
@@ -289,6 +317,7 @@ SUBJECTS = [
         "category": "interface",
         "became_usable_on": "2024-10-01",
         "resource_url": "https://platform.claude.com/docs",
+        "source_url": "https://openai.com/index/introducing-the-realtime-api/",
         "one_liner": (
             "Speech in, speech out, fast enough to interrupt — a phone conversation with "
             "software that understands what you mean."
@@ -316,6 +345,7 @@ SUBJECTS = [
         "category": "build",
         "became_usable_on": "2023-09-25",
         "resource_url": "https://platform.claude.com/docs/en/build-with-claude/vision",
+        "source_url": "https://openai.com/index/chatgpt-can-now-see-hear-and-speak/",
         "one_liner": (
             "Send an image and ask a question about it in plain language — no training, no "
             "labelled dataset, no fixed list of things it can recognise."
@@ -343,6 +373,7 @@ SUBJECTS = [
         "category": "automate",
         "became_usable_on": "2024-03-04",
         "resource_url": "https://platform.claude.com/docs/en/build-with-claude/pdf-support",
+        "source_url": "https://www.anthropic.com/news/claude-3-family",
         "one_liner": (
             "Pull structured data out of PDFs, scans, and photos regardless of layout — no "
             "per-vendor template to configure."
@@ -370,6 +401,7 @@ SUBJECTS = [
         "category": "media",
         "became_usable_on": "2022-08-22",
         "resource_url": "https://stability.ai",
+        "source_url": "https://stability.ai/news-updates/stable-diffusion-public-release",
         "one_liner": "Describe a picture in words and get the picture.",
         "what_you_can_build": (
             "Illustrations for a blog nobody would have paid an illustrator for\n"
@@ -393,8 +425,9 @@ SUBJECTS = [
         "slug": "instruction-image-editing",
         "title": "Editing images by asking",
         "category": "media",
-        "became_usable_on": "2024-08-01",
-        "resource_url": "https://stability.ai",
+        "became_usable_on": "2023-05-23",
+        "resource_url": "https://helpx.adobe.com/photoshop/using/generative-fill.html",
+        "source_url": "https://helpx.adobe.com/photoshop/using/whats-new/2023-3.html",
         "one_liner": (
             "Change a photo by describing the change — remove the object, swap the "
             "background, extend the frame — without touching a selection tool."
@@ -421,6 +454,7 @@ SUBJECTS = [
         "category": "media",
         "became_usable_on": "2024-12-09",
         "resource_url": "https://runwayml.com",
+        "source_url": "https://openai.com/index/sora-is-here/",
         "one_liner": (
             "Generate short video clips from a description or a still image, including "
             "camera movement and consistent characters."
@@ -447,6 +481,7 @@ SUBJECTS = [
         "category": "infra",
         "became_usable_on": "2023-03-10",
         "resource_url": "https://ollama.com",
+        "source_url": "https://github.com/ggml-org/llama.cpp",
         "one_liner": (
             "Capable open-weight models that run on a laptop — no internet, no API bill, "
             "nothing leaving the building."
@@ -472,8 +507,9 @@ SUBJECTS = [
         "slug": "fine-tuning-lora",
         "title": "Fine-tuning and LoRA",
         "category": "infra",
-        "became_usable_on": "2023-04-01",
+        "became_usable_on": "2023-02-10",
         "resource_url": "https://huggingface.co/docs/peft",
+        "source_url": "https://huggingface.co/blog/peft",
         "one_liner": (
             "Nudge an existing model toward your style, format, or niche vocabulary using a "
             "few hundred examples and a modest budget."
@@ -499,8 +535,16 @@ SUBJECTS = [
         "slug": "long-context",
         "title": "Long context windows",
         "category": "infra",
-        "became_usable_on": "2024-02-15",
+        "became_usable_on": "2024-04-09",
+        "date_note": (
+            "Gemini 1.5 Pro's 1M-token window was announced 15 Feb 2024 but waitlisted; "
+            "dated to the day it opened to everyone."
+        ),
         "resource_url": "https://platform.claude.com/docs/en/build-with-claude/context-windows",
+        "source_url": (
+            "https://developers.googleblog.com/en/gemini-15-pro-now-available-in-180-countries"
+            "-with-native-audio-understanding-system-instructions-json-mode-and-more/"
+        ),
         "one_liner": (
             "Models that hold a whole book, codebase, or year of email in view at once — "
             "hundreds of thousands of words per question."
@@ -530,6 +574,7 @@ SUBJECTS = [
         "resource_url": (
             "https://platform.claude.com/docs/en/agents-and-tools/computer-use/overview"
         ),
+        "source_url": "https://www.anthropic.com/news/3-5-models-and-computer-use",
         "one_liner": (
             "A model that looks at a screen and moves the mouse and keyboard — driving "
             "software the way a person does, with no API required."
@@ -554,8 +599,13 @@ SUBJECTS = [
         "slug": "evals-llm-judge",
         "title": "Evals and LLM-as-judge",
         "category": "infra",
-        "became_usable_on": "2023-10-01",
+        "became_usable_on": "2023-06-09",
+        "date_note": (
+            "Dated to the LLM-as-judge paper. OpenAI open-sourced the Evals framework "
+            "earlier, on 14 Mar 2023."
+        ),
         "resource_url": "https://platform.claude.com/docs/en/test-and-evaluate/eval-tool",
+        "source_url": "https://arxiv.org/abs/2306.05685",
         "one_liner": (
             "Grade the quality of open-ended output automatically, using a model as the "
             "marker against a written rubric."
@@ -581,8 +631,9 @@ SUBJECTS = [
         "slug": "text-to-sql",
         "title": "Text-to-SQL and natural-language BI",
         "category": "build",
-        "became_usable_on": "2023-11-06",
+        "became_usable_on": "2023-07-06",
         "resource_url": "https://platform.claude.com/docs",
+        "source_url": "https://x.com/OpenAI/status/1677015057316872192",
         "one_liner": (
             "Ask a question about your data in English; get the query, the numbers, and the chart."
         ),
@@ -606,8 +657,13 @@ SUBJECTS = [
         "slug": "synthetic-data",
         "title": "Synthetic data generation",
         "category": "build",
-        "became_usable_on": "2023-07-01",
+        "became_usable_on": "2023-03-13",
+        "date_note": (
+            "No launch event. Dated to Stanford Alpaca, the project that made generating "
+            "training data from a model a normal thing to do."
+        ),
         "resource_url": "https://platform.claude.com/docs",
+        "source_url": "https://github.com/tatsu-lab/stanford_alpaca",
         "one_liner": (
             "Generate realistic-but-fake records, conversations, or examples to test, demo, "
             "or train with."

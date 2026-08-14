@@ -37,6 +37,7 @@ class SubjectDetailSerializer(serializers.ModelSerializer):
             "resource_url",
             "source_url",
             "became_usable_on",
+            "date_note",
         ]
 
     def get_what_you_can_build(self, obj):

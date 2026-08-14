@@ -1,9 +1,14 @@
+from datetime import date
+from io import StringIO
+
 from django.contrib.auth.models import User
+from django.core.management import call_command
 from django.test import TestCase
 from django.urls import reverse
 
 from syllabus.forms import SubjectForm
 from syllabus.models import Category, Status, Subject
+from syllabus.seed_data import SUBJECTS
 
 VALID = {
     "title": "Retrieval augmented generation",
@@ -72,6 +77,43 @@ class SubjectFormTests(TestCase):
         form = SubjectForm(data={**VALID, "slug": "kept"}, instance=subject)
         self.assertTrue(form.is_valid(), form.errors)
         self.assertEqual(form.save().slug, "kept")
+
+    def test_date_note_is_optional(self):
+        # VALID omits it entirely: most entries have an exact date and nothing to explain.
+        form = SubjectForm(data=VALID)
+        self.assertTrue(form.is_valid(), form.errors)
+        self.assertEqual(form.save().date_note, "")
+
+    def test_date_note_round_trips(self):
+        note = "No launch day — dated to the release that made it practical."
+        form = SubjectForm(data={**VALID, "date_note": note})
+        self.assertTrue(form.is_valid(), form.errors)
+        self.assertEqual(form.save().date_note, note)
+
+
+class SeedDataTests(TestCase):
+    """The seeds are hand-written, so only a test stops an uncited date going back in."""
+
+    def test_every_entry_cites_a_source_and_a_parseable_date(self):
+        for item in SUBJECTS:
+            with self.subTest(slug=item["slug"]):
+                self.assertTrue(item.get("source_url"), "no source_url")
+                self.assertTrue(item.get("became_usable_on"), "no became_usable_on")
+                date.fromisoformat(item["became_usable_on"])
+
+    def test_reseeding_keeps_the_first_published_on(self):
+        # published_on belongs in create_defaults only: re-running the seeder to pick up
+        # edited copy must not restamp rows that were published months ago.
+        call_command("seed_syllabus", stdout=StringIO())
+        first = Subject.objects.get(slug="rag").published_on
+        call_command("seed_syllabus", stdout=StringIO())
+        self.assertEqual(Subject.objects.get(slug="rag").published_on, first)
+
+    def test_reseeding_updates_edited_copy(self):
+        call_command("seed_syllabus", stdout=StringIO())
+        Subject.objects.filter(slug="rag").update(one_liner="stale")
+        call_command("seed_syllabus", stdout=StringIO())
+        self.assertNotEqual(Subject.objects.get(slug="rag").one_liner, "stale")
 
 
 class AccessTests(TestCase):

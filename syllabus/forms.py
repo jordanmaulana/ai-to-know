@@ -28,6 +28,7 @@ class SubjectForm(forms.ModelForm):
             "slug",
             "category",
             "became_usable_on",
+            "date_note",
             "one_liner",
             "what_you_can_build",
             "before_this",
@@ -46,6 +47,9 @@ class SubjectForm(forms.ModelForm):
             "became_usable_on": forms.DateInput(
                 attrs={"class": INPUT, "type": "date"}, format="%Y-%m-%d"
             ),
+            "date_note": forms.TextInput(
+                attrs={"class": INPUT, "placeholder": "only when the date is a judgement call"}
+            ),
             "one_liner": forms.TextInput(attrs={"class": INPUT}),
             "what_you_can_build": forms.Textarea(attrs={"class": AREA, "rows": 5}),
             "before_this": forms.Textarea(attrs={"class": AREA, "rows": 4}),
@@ -59,6 +63,7 @@ class SubjectForm(forms.ModelForm):
             "before_this": "Before this",
             "why_new": "Why it is new",
             "became_usable_on": "Became usable on",
+            "date_note": "Date note",
             "resource_url": "Start here URL",
             "source_url": "Source URL",
         }
@@ -66,6 +71,8 @@ class SubjectForm(forms.ModelForm):
             "slug": "The public URL: /subjects/<slug>. Changing it breaks existing links.",
             "one_liner": "One plain sentence. No hype.",
             "what_you_can_build": "One concrete thing per line, no bullet characters.",
+            "date_note": "Why this date and not another. Leave blank when the date is exact.",
+            "source_url": "The announcement that dates it. Not the same as Start here.",
         }
 
     def __init__(self, *args, **kwargs):

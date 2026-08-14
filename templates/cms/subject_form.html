@@ -86,6 +86,13 @@
         {% include "_partials/field.html" with field=form.slug %}
         {% include "_partials/field.html" with field=form.category %}
         {% include "_partials/field.html" with field=form.became_usable_on %}
+        {% comment %}
+        Full width: the note is a sentence, not a value, so it would be cramped in a
+        half-width cell beside the date input it explains.
+        {% endcomment %}
+        <div class="sm:col-span-2">
+          {% include "_partials/field.html" with field=form.date_note %}
+        </div>
       </div>
     </section>
 

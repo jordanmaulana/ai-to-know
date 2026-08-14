@@ -34,6 +34,12 @@ class Subject(BaseModel):
     became_usable_on = models.DateField(
         null=True, blank=True, help_text="Roughly when this became practical for normal people."
     )
+    date_note = models.CharField(
+        max_length=300,
+        blank=True,
+        default="",
+        help_text="Why this date and not another. Fill in when it is an editorial anchor.",
+    )
     published_on = models.DateTimeField(null=True, blank=True)
 
     class Meta:

@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { Link, createFileRoute } from "@tanstack/react-router";
 import { ArrowLeft, ArrowUpRight } from "lucide-react";
 
+import { formatUsableOn } from "@/features/syllabus/format";
 import { useSubject } from "@/features/syllabus/hooks";
 
 export const Route = createFileRoute("/subjects/$slug")({
@@ -52,8 +53,16 @@ function SubjectPage() {
 
         {subject && (
           <article className="rise">
-            <p className="font-mono text-[0.6875rem] tracking-widest text-muted uppercase">
-              {subject.category_label}
+            <p className="flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-[0.6875rem] tracking-widest text-muted uppercase">
+              <span>{subject.category_label}</span>
+              {formatUsableOn(subject.became_usable_on) && (
+                <>
+                  <span className="text-rule" aria-hidden>
+                    /
+                  </span>
+                  <span>Usable {formatUsableOn(subject.became_usable_on)}</span>
+                </>
+              )}
             </p>
 
             <h1 className="font-display mt-5 text-4xl leading-[1.08] font-semibold tracking-tight text-balance sm:text-5xl">
@@ -63,6 +72,14 @@ function SubjectPage() {
             <p className="mt-6 max-w-2xl text-lg leading-relaxed text-ink/80">
               {subject.one_liner}
             </p>
+
+            {/* Only present when the date is a judgement call, so the reader knows not to
+                read it as a launch day. Most entries render nothing here. */}
+            {subject.date_note && (
+              <p className="mt-4 max-w-2xl border-l-2 border-rule pl-4 text-sm leading-relaxed text-muted">
+                {subject.date_note}
+              </p>
+            )}
 
             {/* The hinge: the whole point of the entry is this before/after pair. */}
             <section

@@ -21,6 +21,8 @@ export interface SubjectDetail extends Subject {
   why_new: string;
   resource_url: string;
   source_url: string;
+  /** Empty unless the date is an editorial anchor rather than a launch day. */
+  date_note: string;
 }
 
 export const CATEGORIES: { slug: CategorySlug; label: string }[] = [
