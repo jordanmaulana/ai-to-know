@@ -8,10 +8,14 @@ import { me } from "@/features/auth/api";
 import { tokenAtom, userAtom } from "@/features/auth/state";
 
 // The syllabus is public, and its detail routes are dynamic (/subjects/<slug>),
-// so membership is a predicate rather than a set.
+// so membership is a predicate rather than a set. /about is public for the same
+// reason "/" is: it explains the list, so it has to be readable before signing in.
 function isPublicPath(pathname: string) {
   return (
-    pathname === "/" || pathname === "/login" || pathname.startsWith("/subjects/")
+    pathname === "/" ||
+    pathname === "/about" ||
+    pathname === "/login" ||
+    pathname.startsWith("/subjects/")
   );
 }
 

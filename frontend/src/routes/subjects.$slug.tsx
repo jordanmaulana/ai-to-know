@@ -1,7 +1,8 @@
 import { useEffect } from "react";
 import { Link, createFileRoute } from "@tanstack/react-router";
-import { ArrowLeft, ArrowUpRight } from "lucide-react";
+import { ArrowUpRight } from "lucide-react";
 
+import { SiteHeader } from "@/components/layout/site-header";
 import { formatUsableOn } from "@/features/syllabus/format";
 import { useSubject } from "@/features/syllabus/hooks";
 
@@ -19,17 +20,7 @@ function SubjectPage() {
 
   return (
     <div className="min-h-full bg-paper text-ink">
-      <header className="border-b border-rule">
-        <div className="mx-auto flex max-w-3xl items-center justify-between px-6 py-5">
-          <Link
-            to="/"
-            className="flex items-center gap-2 font-mono text-xs tracking-widest text-muted uppercase transition-colors hover:text-ink"
-          >
-            <ArrowLeft className="h-3.5 w-3.5" aria-hidden />
-            All capabilities
-          </Link>
-        </div>
-      </header>
+      <SiteHeader width="prose" />
 
       <main className="mx-auto max-w-3xl px-6 pt-14 pb-24">
         {isPending && (
@@ -42,7 +33,7 @@ function SubjectPage() {
           <div>
             <h1 className="font-display text-3xl font-semibold">Not on the list</h1>
             <p className="mt-3 text-sm text-muted">
-              This capability either moved or was never published.{" "}
+              Nothing is published at that address.{" "}
               <Link to="/" className="text-accent underline underline-offset-4">
                 Back to everything
               </Link>

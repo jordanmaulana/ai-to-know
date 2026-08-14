@@ -205,3 +205,24 @@ class CMSTests(TestCase):
         self.assertEqual(
             self.client.get(reverse("cms:subject_edit", kwargs={"slug": "nope"})).status_code, 404
         )
+
+
+class EditorialAPITests(TestCase):
+    """The /about page reads the bar over this endpoint, signed out."""
+
+    def test_anonymous_gets_the_bar(self):
+        response = self.client.get(reverse("api-v1-editorial"))
+        self.assertEqual(response.status_code, 200)
+
+        body = response.json()
+        self.assertTrue(body["bar"])
+        self.assertTrue(body["qualifies"])
+        self.assertTrue(body["disqualifies"])
+        self.assertEqual(len(body["categories"]), len(Category.choices))
+        self.assertEqual([q["question"] for q in body["three_questions"]][:1], ["What is it?"])
+
+    def test_every_category_carries_a_note(self):
+        # A new Category member with no CATEGORY_NOTES entry would render a blank line
+        # on /about rather than fail anywhere, so assert the pairing here.
+        for category in self.client.get(reverse("api-v1-editorial")).json()["categories"]:
+            self.assertTrue(category["note"], category["slug"])

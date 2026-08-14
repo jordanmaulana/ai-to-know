@@ -25,6 +25,15 @@ export interface SubjectDetail extends Subject {
   date_note: string;
 }
 
+/** The editorial bar, served from syllabus/editorial.py so /about never restates it. */
+export interface Editorial {
+  bar: string;
+  three_questions: { question: string; note: string }[];
+  qualifies: string[];
+  disqualifies: string[];
+  categories: { slug: CategorySlug; label: string; note: string }[];
+}
+
 export const CATEGORIES: { slug: CategorySlug; label: string }[] = [
   { slug: "build", label: "Build software" },
   { slug: "automate", label: "Automate work" },

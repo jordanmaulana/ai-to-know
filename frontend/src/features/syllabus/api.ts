@@ -1,5 +1,5 @@
 import { api } from "@/lib/api";
-import type { Subject, SubjectDetail } from "@/features/syllabus/types";
+import type { Editorial, Subject, SubjectDetail } from "@/features/syllabus/types";
 
 export interface SubjectFilters {
   category?: string;
@@ -18,4 +18,8 @@ export async function listSubjects(filters: SubjectFilters = {}): Promise<Subjec
 
 export async function getSubject(slug: string): Promise<SubjectDetail> {
   return api<SubjectDetail>(`/syllabus/subjects/${slug}/`, { skipAuth: true });
+}
+
+export async function getEditorial(): Promise<Editorial> {
+  return api<Editorial>("/syllabus/editorial/", { skipAuth: true });
 }

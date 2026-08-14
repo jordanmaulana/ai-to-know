@@ -1,6 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
 
-import { getSubject, listSubjects, type SubjectFilters } from "@/features/syllabus/api";
+import {
+  getEditorial,
+  getSubject,
+  listSubjects,
+  type SubjectFilters,
+} from "@/features/syllabus/api";
 
 export function useSubjects(filters: SubjectFilters = {}) {
   return useQuery({
@@ -15,5 +20,15 @@ export function useSubject(slug: string) {
     queryKey: ["subject", slug],
     queryFn: () => getSubject(slug),
     staleTime: 5 * 60 * 1000,
+  });
+}
+
+// The bar is module constants on the server: it can only change on deploy, so unlike
+// the subject list there is nothing to go stale within a session.
+export function useEditorial() {
+  return useQuery({
+    queryKey: ["editorial"],
+    queryFn: getEditorial,
+    staleTime: Infinity,
   });
 }

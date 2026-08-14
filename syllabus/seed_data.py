@@ -3,19 +3,19 @@
 Editorial bar for anything in this list: it must let a normal person do something
 that was impossible or wildly impractical before it existed. "Faster" is not enough.
 
-`what_you_can_build` is one concrete item per line — the frontend splits on newlines.
+`what_you_can_build` is one concrete item per line; the frontend splits on newlines.
 """
 
 SUBJECTS = [
     {
         "slug": "rag",
-        "title": "RAG — Retrieval-Augmented Generation",
+        "title": "RAG: retrieval-augmented generation",
         "category": "build",
         "became_usable_on": "2023-03-01",
         "date_note": (
-            "No launch day — the technique is from a 2020 paper. Dated to the cheap chat API "
-            "that made it practical; LangChain's first release (Oct 2022) is an equally fair "
-            "anchor."
+            "The technique comes from a 2020 paper, so there is no launch day. Dated here "
+            "to the cheap chat API that made it practical. LangChain's first release "
+            "(Oct 2022) is an equally fair anchor."
         ),
         "resource_url": "https://www.anthropic.com/news/contextual-retrieval",
         "source_url": "https://openai.com/index/introducing-chatgpt-and-whisper-apis/",
@@ -26,20 +26,20 @@ SUBJECTS = [
         "what_you_can_build": (
             "A chatbot that answers from your company handbook, contracts, or product docs\n"
             "Customer support that cites the exact paragraph it got the answer from\n"
-            "A search box over years of meeting notes that answers questions instead of "
-            "returning ten blue links\n"
+            "A search box over years of meeting notes that answers the question you typed\n"
             "A study assistant that only knows your lecture slides"
         ),
         "before_this": (
             "You wrote FAQ pages by hand and hoped the wording matched what people typed. "
-            "Anything smarter meant a keyword search engine plus a team to tune synonyms, "
-            "and it still could not answer a question that spanned two documents."
+            "Anything smarter meant a keyword search engine and a team to tune synonyms, "
+            "and even then a question spanning two documents went unanswered."
         ),
         "why_new": (
-            "Answering a question that requires reading and combining several documents "
-            "used to require a human reader. Keyword search could point you at files; it "
-            "could not read them for you. Now a machine reads the relevant pages and "
-            "writes the answer, and you can point it at private material it has never seen."
+            "Search engines hand you files and leave the reading to you. When the answer "
+            "sits half in one document and half in another, somebody has to open both and "
+            "work it out. That reading is done by a machine now. It works on private "
+            "material, on documents written last week, on anything that never went near a "
+            "training set."
         ),
     },
     {
@@ -60,18 +60,17 @@ SUBJECTS = [
             "Working scripts in a language you have never learned\n"
             "Tests for code you already wrote, in one keystroke\n"
             "An explanation of a file someone else wrote five years ago\n"
-            "Boilerplate — forms, API clients, config — without typing it"
+            "Boilerplate you never type: forms, API clients, config"
         ),
         "before_this": (
             "You searched Stack Overflow, adapted a stranger's snippet, and read library "
-            "docs until the shape of the API was in your head. Autocomplete could finish a "
-            "variable name; it could not finish a thought."
+            "docs until the shape of the API was in your head. Autocomplete got you as far "
+            "as the rest of a variable name."
         ),
         "why_new": (
-            "Programming used to be gated on recall — you had to hold syntax and API "
-            "details in memory. Now you can describe intent in English and get working "
-            "code, which means people who are not programmers ship small programs, and "
-            "programmers work in languages they do not know."
+            "Describe what you want in English and get code that runs. People who never "
+            "learned to program ship small tools, and people who did work in languages "
+            "they have never used."
         ),
     },
     {
@@ -82,8 +81,8 @@ SUBJECTS = [
         "resource_url": "https://code.claude.com/docs",
         "source_url": "https://www.anthropic.com/news/claude-3-7-sonnet",
         "one_liner": (
-            "A model that works in your actual repository — reads files, edits them, runs "
-            "the tests, and fixes what it broke — instead of handing you a snippet."
+            "A model that works in your actual repository. It reads files, edits them, "
+            "runs the tests, and fixes what it broke."
         ),
         "what_you_can_build": (
             "A whole feature from a paragraph of description, delivered as a pull request\n"
@@ -93,26 +92,25 @@ SUBJECTS = [
         ),
         "before_this": (
             "You copied code out of a chat window, pasted it in, ran it, copied the error "
-            "back, and repeated. Every loop needed a human in the middle to move text "
-            "between two windows."
+            "back, and repeated. Every loop needed a person to move text between two "
+            "windows."
         ),
         "why_new": (
-            "The loop closed. A model that can run the code sees whether it worked and "
-            "tries again — so tasks that take hours of iteration can be handed over whole "
-            "rather than one snippet at a time. Multi-file changes stopped being a human-"
-            "only job."
+            "A model that can run the code sees whether it worked, so it retries without "
+            "you. Work that used to take an afternoon of copy-paste gets handed over once, "
+            "in full, across as many files as it touches."
         ),
     },
     {
         "slug": "mcp",
-        "title": "MCP — Model Context Protocol",
+        "title": "MCP: the Model Context Protocol",
         "category": "infra",
         "became_usable_on": "2024-11-25",
         "resource_url": "https://modelcontextprotocol.io",
         "source_url": "https://www.anthropic.com/news/model-context-protocol",
         "one_liner": (
-            "A standard plug shape for connecting AI assistants to tools and data — one "
-            "connector per service, usable by any assistant that speaks it."
+            "A standard plug shape for connecting AI assistants to tools and data. Write "
+            "one connector per service and any assistant that speaks it can use it."
         ),
         "what_you_can_build": (
             "Give your assistant read access to your Postgres, Slack, or Google Drive in "
@@ -128,15 +126,15 @@ SUBJECTS = [
             "throwing it away when you switched."
         ),
         "why_new": (
-            "Integrations became portable. Before, the work of connecting a model to a "
-            "system was locked to whichever vendor you connected it to — so nobody built "
-            "connectors for niche systems. A shared protocol made a long tail of "
-            "integrations worth writing once."
+            "Nobody was going to write the same connector four times over, once per "
+            "vendor, so niche systems stayed unconnected. Write it once against a shared "
+            "protocol and it pays off everywhere, which is what makes the long tail worth "
+            "building at all."
         ),
     },
     {
         "slug": "tool-use",
-        "title": "Tool use — models that call your functions",
+        "title": "Tool use: models that call your functions",
         "category": "agents",
         "became_usable_on": "2023-06-13",
         "resource_url": "https://platform.claude.com/docs/en/agents-and-tools/tool-use/overview",
@@ -146,7 +144,7 @@ SUBJECTS = [
             "them and what to pass in, then uses the result."
         ),
         "what_you_can_build": (
-            "An assistant that actually books the meeting instead of describing how to\n"
+            "An assistant that books the meeting rather than describing how to book it\n"
             "A support bot that looks up a real order status before answering\n"
             "A model that does arithmetic by calling a calculator instead of guessing\n"
             "Anything where the answer depends on live data the model cannot know"
@@ -156,9 +154,9 @@ SUBJECTS = [
             "regular expressions and hoped the format held. It broke constantly."
         ),
         "why_new": (
-            "This is the hinge that turned a text generator into something that can do "
-            "things. Every agent, every assistant that touches a real system, sits on top "
-            "of it — before it, an AI could tell you what to do but never do it."
+            "Everything that acts on your behalf runs on this. An assistant that books a "
+            "table, files a ticket, or moves money is calling a function you defined, and "
+            "until 2023 there was no dependable way to let it."
         ),
     },
     {
@@ -169,8 +167,8 @@ SUBJECTS = [
         "resource_url": "https://platform.claude.com/docs/en/build-with-claude/structured-outputs",
         "source_url": "https://openai.com/index/introducing-structured-outputs-in-the-api/",
         "one_liner": (
-            "Hand the model a schema and get back JSON that always matches it — no parsing, "
-            "no retries, no cleanup."
+            "Hand the model a schema and get back JSON that matches it every time, ready "
+            "to feed straight into the rest of your program."
         ),
         "what_you_can_build": (
             "Turn a pile of messy resumes into a clean spreadsheet\n"
@@ -184,9 +182,9 @@ SUBJECTS = [
             "opening brace."
         ),
         "why_new": (
-            "It made AI safe to put inside ordinary software. Unpredictable output can be "
-            "read by a human but not consumed by a program; a guaranteed shape means an AI "
-            "step can sit in a pipeline like any other function call."
+            "A program cannot branch on a paragraph. Once the shape is guaranteed, an AI "
+            "step sits in a pipeline like any other function call and the code around it "
+            "stops needing a defensive wrapper."
         ),
     },
     {
@@ -198,7 +196,7 @@ SUBJECTS = [
         "source_url": "https://openai.com/index/new-and-improved-embedding-model/",
         "one_liner": (
             "Turn text, images, or audio into coordinates, so things that mean the same "
-            "thing land near each other — searchable by meaning rather than by wording."
+            "thing land near each other. You search by meaning rather than by wording."
         ),
         "what_you_can_build": (
             "Search that finds 'cannot log in' when the ticket says 'password rejected'\n"
@@ -212,9 +210,10 @@ SUBJECTS = [
             "of your users drifted."
         ),
         "why_new": (
-            "Meaning became measurable, cheaply and at scale. 'Find things like this one' "
-            "used to require a human to define what 'like' meant, category by category — "
-            "now it is a distance calculation over any pile of text you have."
+            "'Find things like this one' used to need a person to say what 'like' meant, "
+            "category by category, and to keep saying it as the vocabulary moved. Now it "
+            "is a distance calculation, and it runs over any pile of text you already have "
+            "for a cost small enough to ignore."
         ),
     },
     {
@@ -245,9 +244,9 @@ SUBJECTS = [
             "flow and onto somebody's desk."
         ),
         "why_new": (
-            "The judgement step got automated, not just the plumbing. Zapier could move "
-            "data between apps for a decade; what it could not do was decide whether an "
-            "email was a complaint. Now the whole chain runs unattended."
+            "Zapier has moved data between apps for a decade. The part it always handed "
+            "back was the reading: is this a complaint, does this invoice look wrong, "
+            "which of four people should see it. That step runs unattended now too."
         ),
     },
     {
@@ -258,8 +257,8 @@ SUBJECTS = [
         "resource_url": "https://github.com/openai/whisper",
         "source_url": "https://openai.com/index/whisper/",
         "one_liner": (
-            "Accurate transcription of ordinary speech — accents, background noise, "
-            "multiple languages — cheap enough to run on everything you record."
+            "Accurate transcription of ordinary speech, accents and background noise "
+            "included, cheap enough to run on everything you record."
         ),
         "what_you_can_build": (
             "Searchable transcripts of every meeting your team has ever had\n"
@@ -273,9 +272,9 @@ SUBJECTS = [
             "room."
         ),
         "why_new": (
-            "Transcription went from a per-hour cost to effectively free, which changed "
-            "what you transcribe. Nobody transcribed every meeting at £1 a minute — at "
-            "near zero, spoken conversation becomes a searchable archive."
+            "At a pound a minute you transcribed the one interview that mattered. At close "
+            "to nothing you transcribe everything, and a year of meetings turns into an "
+            "archive you can search."
         ),
     },
     {
@@ -292,8 +291,7 @@ SUBJECTS = [
             "eleven-multilingual-v2-a-foundational-ai-speech-model-for-nearly-30-languages"
         ),
         "one_liner": (
-            "Speech synthesis that sounds like a person rather than a robot, in any voice "
-            "you have a short sample of."
+            "Speech synthesis that sounds like a person, in any voice you have a short sample of."
         ),
         "what_you_can_build": (
             "An audiobook of your own writing, in your own voice\n"
@@ -306,9 +304,9 @@ SUBJECTS = [
             "of a screen reader. Changing one sentence meant booking the session again."
         ),
         "why_new": (
-            "Editing audio narration used to mean re-recording it. Now a script change is a "
-            "text edit, and a one-person project can ship the kind of voiced content that "
-            "used to require a budget and a booth."
+            "Changing a line of narration is a text edit now rather than a booking, which "
+            "is why one person on a laptop can put out dubbed courses and voiced games "
+            "that used to need a budget and a booth."
         ),
     },
     {
@@ -319,8 +317,8 @@ SUBJECTS = [
         "resource_url": "https://platform.claude.com/docs",
         "source_url": "https://openai.com/index/introducing-the-realtime-api/",
         "one_liner": (
-            "Speech in, speech out, fast enough to interrupt — a phone conversation with "
-            "software that understands what you mean."
+            "Speech in, speech out, fast enough that you can cut in mid-sentence and it "
+            "holds up as an actual phone conversation."
         ),
         "what_you_can_build": (
             "A booking line that handles reschedules at 2am\n"
@@ -334,9 +332,9 @@ SUBJECTS = [
             "transfer you'."
         ),
         "why_new": (
-            "Unscripted spoken conversation with a machine became possible. IVR systems "
-            "could only walk a tree somebody drew; a voice agent can handle a request "
-            "nobody predicted, and hear you cut in halfway through."
+            "You can say something nobody planned for and still get an answer. Phone trees "
+            "only ever walked the branches someone drew in advance, so the useful half of "
+            "any call ended up with a person anyway."
         ),
     },
     {
@@ -347,8 +345,8 @@ SUBJECTS = [
         "resource_url": "https://platform.claude.com/docs/en/build-with-claude/vision",
         "source_url": "https://openai.com/index/chatgpt-can-now-see-hear-and-speak/",
         "one_liner": (
-            "Send an image and ask a question about it in plain language — no training, no "
-            "labelled dataset, no fixed list of things it can recognise."
+            "Send an image and ask a question about it in plain language. There is no "
+            "training step and no fixed list of things it can recognise."
         ),
         "what_you_can_build": (
             "A screenshot of a design turned into working front-end code\n"
@@ -358,13 +356,12 @@ SUBJECTS = [
         ),
         "before_this": (
             "Computer vision meant collecting thousands of labelled examples and training a "
-            "model per task. 'Is this shelf tidy?' was a research project, not a question "
-            "you could ask."
+            "model per task. 'Is this shelf tidy?' was a research project."
         ),
         "why_new": (
-            "You can now ask an open-ended question about an image without training "
-            "anything. Old vision systems only recognised the categories they were built "
-            "for; these answer questions their builders never anticipated."
+            "The question does not have to be one anybody planned for. A classifier trained "
+            "on shelf photos knows shelves; this will tell you the third box from the left "
+            "is upside down, in a warehouse it has never seen, first time you ask."
         ),
     },
     {
@@ -375,8 +372,8 @@ SUBJECTS = [
         "resource_url": "https://platform.claude.com/docs/en/build-with-claude/pdf-support",
         "source_url": "https://www.anthropic.com/news/claude-3-family",
         "one_liner": (
-            "Pull structured data out of PDFs, scans, and photos regardless of layout — no "
-            "per-vendor template to configure."
+            "Pull structured data out of PDFs, scans, and photos whatever the layout, with "
+            "no per-vendor template to configure."
         ),
         "what_you_can_build": (
             "Supplier invoices from any format into your accounting system\n"
@@ -390,9 +387,8 @@ SUBJECTS = [
             "time a supplier redesigned their invoice."
         ),
         "why_new": (
-            "The template disappeared. Handling a document layout you have never seen "
-            "before used to be impossible by definition — the system only knew the layouts "
-            "someone configured. Now the first document from a new supplier just works."
+            "The first invoice from a new supplier works, with nobody having configured "
+            "anything for it."
         ),
     },
     {
@@ -415,10 +411,9 @@ SUBJECTS = [
             "days."
         ),
         "why_new": (
-            "Specific, novel images became free and instant. Stock libraries only held "
-            "pictures someone had already taken — if your idea was unusual, no amount of "
-            "money-free searching would find it. Now the long tail of images gets made on "
-            "demand."
+            "Stock libraries only hold pictures somebody already took. If what you had in "
+            "mind was unusual, no budget and no amount of searching would turn it up. Now "
+            "it gets made on request, in about ten seconds."
         ),
     },
     {
@@ -429,8 +424,8 @@ SUBJECTS = [
         "resource_url": "https://helpx.adobe.com/photoshop/using/generative-fill.html",
         "source_url": "https://helpx.adobe.com/photoshop/using/whats-new/2023-3.html",
         "one_liner": (
-            "Change a photo by describing the change — remove the object, swap the "
-            "background, extend the frame — without touching a selection tool."
+            "Change a photo by describing the change. Remove the bin, swap the background, "
+            "extend the frame, without touching a selection tool."
         ),
         "what_you_can_build": (
             "Clean product shots from photos taken on a phone in a cluttered room\n"
@@ -443,9 +438,9 @@ SUBJECTS = [
             "Removing a person from a photo convincingly was a skilled job."
         ),
         "why_new": (
-            "Edits that used to demand craft skill became a sentence. The barrier to photo "
-            "editing was never the software licence — it was that masking, cloning, and "
-            "relighting take training. That barrier is gone."
+            "Masking, cloning and relighting take years to do convincingly, and that, "
+            "rather than the price of the software, is what kept photo editing a "
+            "specialist trade. The edit is a sentence now."
         ),
     },
     {
@@ -466,13 +461,13 @@ SUBJECTS = [
             "A music video made by the musician"
         ),
         "before_this": (
-            "A camera, a crew, a location, and a schedule — or an animator working for "
-            "weeks. Even a five-second clip had a fixed minimum cost in people and time."
+            "A camera, a crew, a location and a schedule, or else an animator working for "
+            "weeks. Even a five-second clip had a floor under it, in people and in days."
         ),
         "why_new": (
-            "Moving pictures stopped requiring either a camera pointed at something real or "
-            "a person drawing every frame. That is a genuinely new third way to make video, "
-            "and it collapses the cost of trying an idea before producing it."
+            "For a century there were two ways to make moving pictures: point a camera at "
+            "something real, or draw every frame. There is a third now, and it costs little "
+            "enough that you can try the idea before deciding whether to produce it."
         ),
     },
     {
@@ -483,8 +478,8 @@ SUBJECTS = [
         "resource_url": "https://ollama.com",
         "source_url": "https://github.com/ggml-org/llama.cpp",
         "one_liner": (
-            "Capable open-weight models that run on a laptop — no internet, no API bill, "
-            "nothing leaving the building."
+            "Capable open-weight models that run on a laptop, with no API bill and nothing "
+            "leaving the building."
         ),
         "what_you_can_build": (
             "Assistants over data that legally cannot leave your network\n"
@@ -498,9 +493,9 @@ SUBJECTS = [
             "vanish without notice."
         ),
         "why_new": (
-            "Confidential and offline use became possible at all. Regulated industries and "
-            "disconnected environments were simply excluded from AI when the only option "
-            "was a remote API — now the model runs where the data already is."
+            "A hospital, a law firm, a ship at sea: none of them could touch any of this "
+            "while the only route was posting the data to someone else's server. The model "
+            "runs where the data already is."
         ),
     },
     {
@@ -525,10 +520,8 @@ SUBJECTS = [
             "labelled dataset in the millions, and a cluster of GPUs for weeks."
         ),
         "why_new": (
-            "Customising a large model came within reach of individuals. The cost fell by "
-            "orders of magnitude — from a corporate research budget to an afternoon and a "
-            "rented GPU — which put specialised models in the hands of people who could "
-            "never have trained one."
+            "People who could never have trained a model can specialise one, for the price "
+            "of a rented GPU and an afternoon."
         ),
     },
     {
@@ -546,7 +539,7 @@ SUBJECTS = [
             "-with-native-audio-understanding-system-instructions-json-mode-and-more/"
         ),
         "one_liner": (
-            "Models that hold a whole book, codebase, or year of email in view at once — "
+            "Models that hold a whole book, codebase, or year of email in view at once, "
             "hundreds of thousands of words per question."
         ),
         "what_you_can_build": (
@@ -561,9 +554,9 @@ SUBJECTS = [
             "requiring the full picture was out of reach."
         ),
         "why_new": (
-            "Reasoning over a whole large document became possible, not just over excerpts. "
-            "Questions like 'is this consistent throughout?' cannot be answered from "
-            "fragments — they need everything in view at once."
+            "'Is this consistent throughout?' is not a question you can answer from "
+            "excerpts. It needs the whole document in view at once, and that is an "
+            "ordinary request now."
         ),
     },
     {
@@ -576,7 +569,7 @@ SUBJECTS = [
         ),
         "source_url": "https://www.anthropic.com/news/3-5-models-and-computer-use",
         "one_liner": (
-            "A model that looks at a screen and moves the mouse and keyboard — driving "
+            "A model that looks at a screen and moves the mouse and keyboard, driving "
             "software the way a person does, with no API required."
         ),
         "what_you_can_build": (
@@ -590,9 +583,12 @@ SUBJECTS = [
             "scripts matched exact pixel positions and broke the moment a button moved."
         ),
         "why_new": (
-            "Software without an API became automatable. That was the hard wall in "
-            "automation for thirty years — a huge amount of office work lives in systems "
-            "that expose nothing programmatically."
+            "A great deal of office work lives in systems that expose nothing "
+            "programmatically: the claims terminal from 1998, the supplier portal with no "
+            "export button. For thirty years automation stopped at that wall. Everything "
+            "on the far side of it stayed manual, or got a screen-scraping script that "
+            "broke every quarter. A model that reads the screen and moves the mouse walks "
+            "straight past it."
         ),
     },
     {
@@ -622,9 +618,9 @@ SUBJECTS = [
             "open-ended was tested by spot-checking and hoping."
         ),
         "why_new": (
-            "Subjective quality became measurable at scale. You could always ask five "
-            "people to rate a hundred answers; you could never ask them to rate a hundred "
-            "thousand, every time you changed a line."
+            "Five people can rate a hundred answers. Nobody can rate a hundred thousand of "
+            "them again every time someone edits a prompt, which is why AI features shipped "
+            "for years on spot-checks and nerve."
         ),
     },
     {
@@ -648,9 +644,9 @@ SUBJECTS = [
             "answered the questions their builder anticipated and nothing else."
         ),
         "why_new": (
-            "The follow-up question became answerable by the person asking it. Pre-built "
-            "dashboards were frozen at the moment of design — every genuinely new question "
-            "required a specialist and a queue."
+            "The person with the question can ask the follow-up themselves. A dashboard is "
+            "frozen at the moment it was designed, so anything past it meant a specialist, "
+            "a ticket, and three days."
         ),
     },
     {
@@ -680,9 +676,9 @@ SUBJECTS = [
             "messiness real data has."
         ),
         "why_new": (
-            "Realistic test data stopped requiring real people's records. Fake data used to "
-            "mean obviously fake data — plausible variety could only come from copying "
-            "something real, with all the risk that carried."
+            "Fake data used to mean obviously fake data. Anything with real variety in it "
+            "had to be copied from real people, and it carried their risk into your "
+            "staging database along with it."
         ),
     },
 ]
