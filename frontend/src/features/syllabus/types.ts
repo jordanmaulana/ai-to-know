@@ -34,6 +34,25 @@ export interface Editorial {
   categories: { slug: CategorySlug; label: string; note: string }[];
 }
 
+/** Where the reader is with a subject. Personal, browser-local, never sent to the API. */
+export type SubjectStatus = "new" | "practicing" | "tried" | "mastered";
+
+/** Status per subject slug. A missing key means "new" — see features/syllabus/progress.ts. */
+export type ProgressMap = Record<string, SubjectStatus>;
+
+/** Drives the picker, the stored-value validator, and the counter's ordering. */
+export const STATUS_OPTIONS: {
+  value: SubjectStatus;
+  label: string;
+  /** Terse form for the tally line, where the first-person label reads badly. */
+  short: string;
+}[] = [
+  { value: "new", label: "New", short: "New" },
+  { value: "practicing", label: "I'm practicing it", short: "Practicing" },
+  { value: "tried", label: "I've tried this", short: "Tried" },
+  { value: "mastered", label: "I mastered this", short: "Mastered" },
+];
+
 export const CATEGORIES: { slug: CategorySlug; label: string }[] = [
   { slug: "build", label: "Build software" },
   { slug: "automate", label: "Automate work" },

@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { Link, createFileRoute } from "@tanstack/react-router";
 import { Check, Minus } from "lucide-react";
 
+import { SiteFooter } from "@/components/layout/site-footer";
 import { SiteHeader } from "@/components/layout/site-header";
 import { useEditorial } from "@/features/syllabus/hooks";
 
@@ -30,7 +31,7 @@ function AboutPage() {
     <div className="min-h-full bg-paper text-ink">
       <SiteHeader width="prose" />
 
-      <main className="mx-auto max-w-3xl px-6 pt-14 pb-24">
+      <main className="mx-auto max-w-3xl px-6 pt-14 pb-20">
         <article className="rise">
           <Eyebrow>How this works</Eyebrow>
 
@@ -208,6 +209,8 @@ function AboutPage() {
           </div>
         </article>
       </main>
+
+      <SiteFooter width="prose" />
     </div>
   );
 }

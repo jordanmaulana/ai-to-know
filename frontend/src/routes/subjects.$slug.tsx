@@ -1,10 +1,14 @@
 import { useEffect } from "react";
 import { Link, createFileRoute } from "@tanstack/react-router";
+import { useAtom } from "jotai";
 import { ArrowUpRight } from "lucide-react";
 
+import { SiteFooter } from "@/components/layout/site-footer";
 import { SiteHeader } from "@/components/layout/site-header";
+import { StatusSelect } from "@/features/syllabus/components/status-select";
 import { formatUsableOn } from "@/features/syllabus/format";
 import { useSubject } from "@/features/syllabus/hooks";
+import { progressAtom } from "@/features/syllabus/state";
 
 export const Route = createFileRoute("/subjects/$slug")({
   component: SubjectPage,
@@ -13,6 +17,7 @@ export const Route = createFileRoute("/subjects/$slug")({
 function SubjectPage() {
   const { slug } = Route.useParams();
   const { data: subject, isPending, isError } = useSubject(slug);
+  const [progress, setStatus] = useAtom(progressAtom);
 
   useEffect(() => {
     if (subject) document.title = `${subject.title} — AI to know`;
@@ -22,7 +27,7 @@ function SubjectPage() {
     <div className="min-h-full bg-paper text-ink">
       <SiteHeader width="prose" />
 
-      <main className="mx-auto max-w-3xl px-6 pt-14 pb-24">
+      <main className="mx-auto max-w-3xl px-6 pt-14 pb-20">
         {isPending && (
           <p className="font-mono text-xs tracking-widest text-muted uppercase">
             Loading&hellip;
@@ -44,17 +49,26 @@ function SubjectPage() {
 
         {subject && (
           <article className="rise">
-            <p className="flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-[0.6875rem] tracking-widest text-muted uppercase">
-              <span>{subject.category_label}</span>
-              {formatUsableOn(subject.became_usable_on) && (
-                <>
-                  <span className="text-rule" aria-hidden>
-                    /
-                  </span>
-                  <span>Usable {formatUsableOn(subject.became_usable_on)}</span>
-                </>
-              )}
-            </p>
+            <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-4">
+              <p className="flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-[0.6875rem] tracking-widest text-muted uppercase">
+                <span>{subject.category_label}</span>
+                {formatUsableOn(subject.became_usable_on) && (
+                  <>
+                    <span className="text-rule" aria-hidden>
+                      /
+                    </span>
+                    <span>Usable {formatUsableOn(subject.became_usable_on)}</span>
+                  </>
+                )}
+              </p>
+
+              {/* Personal, browser-local: the syllabus API is read-only for everyone. */}
+              <StatusSelect
+                status={progress[slug] ?? "new"}
+                onChange={(next) => setStatus(slug, next)}
+                subjectTitle={subject.title}
+              />
+            </div>
 
             <h1 className="font-display mt-5 text-4xl leading-[1.08] font-semibold tracking-tight text-balance sm:text-5xl">
               {subject.title}
@@ -137,6 +151,8 @@ function SubjectPage() {
           </article>
         )}
       </main>
+
+      <SiteFooter width="prose" />
     </div>
   );
 }

@@ -1,11 +1,15 @@
 import { useEffect, useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
+import { useAtom } from "jotai";
 
+import { SiteFooter } from "@/components/layout/site-footer";
 import { SiteHeader } from "@/components/layout/site-header";
 import { FilterRail } from "@/features/syllabus/components/filter-rail";
 import { SubjectCard } from "@/features/syllabus/components/subject-card";
 import { useSubjects } from "@/features/syllabus/hooks";
-import { CATEGORIES } from "@/features/syllabus/types";
+import { progressAtom } from "@/features/syllabus/state";
+import { CATEGORIES, STATUS_OPTIONS } from "@/features/syllabus/types";
+import type { SubjectStatus } from "@/features/syllabus/types";
 
 export const Route = createFileRoute("/")({
   component: SyllabusPage,
@@ -14,6 +18,7 @@ export const Route = createFileRoute("/")({
 function SyllabusPage() {
   const [category, setCategory] = useState("");
   const [query, setQuery] = useState("");
+  const [progress] = useAtom(progressAtom);
 
   // One fetch for the whole list: the chip counts have to cover every category,
   // not just the active one, and filtering ~20 rows locally beats a round-trip.
@@ -38,6 +43,19 @@ function SyllabusPage() {
     });
   }, [subjects, category, query]);
 
+  // Overall progress, not progress within the current filter — and only over slugs
+  // still on the list, so an unpublished subject left in storage can't inflate it.
+  const marked = useMemo(() => {
+    const tally: Partial<Record<SubjectStatus, number>> = {};
+    for (const subject of subjects ?? []) {
+      const status = progress[subject.slug];
+      if (status) tally[status] = (tally[status] ?? 0) + 1;
+    }
+    return STATUS_OPTIONS.filter((option) => tally[option.value]).map(
+      (option) => `${tally[option.value]} ${option.short}`,
+    );
+  }, [subjects, progress]);
+
   const total = subjects?.length ?? 0;
 
   useEffect(() => {
@@ -50,8 +68,8 @@ function SyllabusPage() {
 
       <section className="mx-auto max-w-6xl px-6 pt-12 pb-8 sm:pt-14">
         <h1 className="font-display max-w-3xl text-3xl leading-[1.1] font-semibold tracking-tight text-balance sm:text-4xl">
-          Things that were impossible three years ago and are{" "}
-          <span className="text-accent">ordinary now</span>.
+          You don&rsquo;t have to master any of this. You just have to know what
+          it lets you <span className="text-accent">do now</span>.
         </h1>
         <p className="mt-4 max-w-2xl text-[0.9375rem] leading-relaxed text-muted">
           A plain-English list, in the order they arrived. Every entry says what it
@@ -67,7 +85,7 @@ function SyllabusPage() {
         counts={counts}
       />
 
-      <main className="mx-auto max-w-6xl px-6 pb-24">
+      <main className="mx-auto max-w-6xl px-6 pb-20">
         {isPending && (
           <p className="py-16 font-mono text-xs tracking-widest text-muted uppercase">
             Loading&hellip;
@@ -96,14 +114,24 @@ function SyllabusPage() {
                 <SubjectCard key={subject.slug} subject={subject} index={index} />
               ))}
             </div>
-            <p className="mt-10 border-t border-rule pt-6 font-mono text-[0.6875rem] tracking-widest text-muted uppercase">
+            <p className="mt-10 border-t border-rule pt-6 font-mono text-[0.6875rem] tracking-widest text-muted uppercase tabular-nums">
               {visible.length === total
                 ? `${total} ${total === 1 ? "capability" : "capabilities"}`
                 : `${visible.length} of ${total}`}
+              {marked.map((entry) => (
+                <span key={entry}>
+                  <span className="mx-2 text-rule" aria-hidden>
+                    /
+                  </span>
+                  {entry}
+                </span>
+              ))}
             </p>
           </>
         )}
       </main>
+
+      <SiteFooter />
     </div>
   );
 }
