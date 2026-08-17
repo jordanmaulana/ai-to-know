@@ -30,6 +30,11 @@ crawl:
 crawl-dry:
 	uv run manage.py crawl_hn --dry-run
 
+# Manual run against the compose stack (the `cron` service does this on schedule).
+# Goes through `backend`, not `cron`, so a scheduled run isn't doubled up.
+crawl-docker:
+	docker compose --env-file .env.docker exec -T backend uv run manage.py crawl_hn
+
 tw-run:
 	npx @tailwindcss/cli -i ./static/input.css -o ./static/output.css --watch
 

@@ -66,8 +66,11 @@ rendered for humans at `/dashboard/editorial/` and used verbatim as the crawler'
   per survivor to judge novelty against the existing subject index. Accepted stories become
   **drafts**; nothing reaches the public site until someone publishes it in the CMS.
   `make crawl-dry` runs the prefilter only — no API calls, nothing written.
-- **Daily run** (host cron):
-  `0 8 * * * cd /path/to/repo && /usr/bin/make crawl >> /tmp/hn-crawl.log 2>&1`
+- **Daily run**: the `cron` compose service — same image as `backend` with `ROLE=cron`, running
+  supercronic over `docker/crontab` (`0 8 * * *`, container `TZ`). It is *not* host cron: on a
+  dockerized box `make crawl` from the host reads `.env`, finds no `POSTGRES_HOST`, and writes
+  to a throwaway sqlite file. Logs: `docker compose logs cron`. Editing the schedule needs a
+  container restart. Manual run against the stack: `make crawl-docker`.
 - **CMS** (superuser only, server-rendered Django templates — see below): `/dashboard/` stats,
   `/dashboard/subjects/?status=draft` the review queue for drafts, `/dashboard/queue/` every
   HN story the crawler judged, `/dashboard/editorial/` the rules. `/admin/` stays wired as the
@@ -113,6 +116,7 @@ token auth the SPA uses.
 - `make migrate` / `make mmg` — apply / make migrations.
 - `make seed` — load the hand-written syllabus subjects.
 - `make crawl` / `make crawl-dry` — Hacker News crawl (real / prefilter-only).
+- `make crawl-docker` — run the crawl inside the compose stack (what the `cron` service does daily).
 - `make tw-build` / `make tw-run` — build / watch `static/output.css` for the CMS templates.
 - `make build-static` — prod static: minified CSS then `collectstatic` (manifest storage turns
   a missing `output.css` into a 500, so the order matters).

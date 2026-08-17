@@ -13,9 +13,29 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     UV_LINK_MODE=copy \
     UV_COMPILE_BYTECODE=1
+# tzdata: the image is UTC but settings.TIME_ZONE is Asia/Jakarta — without it the `TZ`
+# env the cron service sets is ignored and the crontab fires 7h off.
 RUN apt-get update && apt-get install -y --no-install-recommends \
-      build-essential libpq5 curl ca-certificates && \
+      build-essential libpq5 curl ca-certificates tzdata && \
     rm -rf /var/lib/apt/lists/*
+
+# supercronic — cron for the `cron` compose service (ROLE=cron). Vanilla cron scrubs the
+# environment, so the job would lose OPENAI_API_KEY/POSTGRES_* from env_file and silently
+# degrade to a prefilter-only crawl. supercronic inherits the env and logs to stdout.
+ARG TARGETARCH
+ARG SUPERCRONIC_VERSION=v0.2.49
+RUN set -eux; \
+    arch="${TARGETARCH:-$(dpkg --print-architecture)}"; \
+    case "$arch" in \
+      amd64) sha1=e63c11a9726b775a6a11801e81af4f3fb926aa68 ;; \
+      arm64) sha1=0b6c5bb743e0b0dafed1132198c81807927ac413 ;; \
+      *) echo "supercronic: unsupported arch '$arch'" >&2; exit 1 ;; \
+    esac; \
+    curl -fsSLo /usr/local/bin/supercronic \
+      "https://github.com/aptible/supercronic/releases/download/${SUPERCRONIC_VERSION}/supercronic-linux-${arch}"; \
+    echo "${sha1}  /usr/local/bin/supercronic" | sha1sum -c -; \
+    chmod +x /usr/local/bin/supercronic
+
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
 WORKDIR /app
 COPY pyproject.toml uv.lock ./

@@ -1,0 +1,7 @@
+# Daily Hacker News crawl -> draft Subjects for the CMS review queue at
+# /dashboard/subjects/?status=draft. Run by the `cron` compose service via supercronic.
+#
+# Wall clock is the container TZ (compose sets TZ=Asia/Jakarta), matching settings.TIME_ZONE.
+# supercronic timestamps and forwards job output to its own stdout, so `docker compose logs
+# cron` is the log — no redirect needed here.
+0 8 * * * cd /app && uv run manage.py crawl_hn
