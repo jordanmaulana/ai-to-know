@@ -27,7 +27,9 @@ services:
       ROLE: web
       POSTGRES_HOST: postgres
     ports:
-      - "8000:8000"
+      # Host 8012 (8000 is taken by another stack); container side stays 8000 —
+      # the healthcheck below and gunicorn's --bind both target the internal port.
+      - "8012:8000"
     depends_on:
       postgres: {condition: service_healthy}
     healthcheck:
@@ -41,6 +43,32 @@ services:
         limits:
           cpus: "1.5"
           memory: 768M
+
+  frontend:
+    build:
+      context: ./frontend
+      # VITE_* are baked into the bundle at build time — changing one needs a rebuild,
+      # not a restart. Values come from the --env-file the Makefile passes.
+      args:
+        VITE_API_URL: ${VITE_API_URL}
+        VITE_GOOGLE_CLIENT_ID: ${VITE_GOOGLE_CLIENT_ID}
+    ports:
+      # Host 3012 (3000/3001/3003/3005/3007/3010 are taken); nginx listens on 3000 inside.
+      - "3012:3000"
+    depends_on:
+      backend: {condition: service_started}
+    healthcheck:
+      # nginx:alpine ships busybox wget, not curl.
+      test: ["CMD", "wget", "-qO-", "http://localhost:3000/"]
+      interval: 30s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 256M
 
 volumes:
   pgdata:

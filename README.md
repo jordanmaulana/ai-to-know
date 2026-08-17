@@ -171,18 +171,28 @@ Syllabus writes have no API. Content is created and published in the CMS, by des
 
 ## Deployment
 
-`docker compose` runs the backend and Postgres. [Dockerfile.backend](Dockerfile.backend) is
-two-stage: a Node stage builds `static/output.css`, then the Python stage runs gunicorn.
+`docker compose` runs Postgres, the backend and the SPA. [Dockerfile.backend](Dockerfile.backend)
+is two-stage: a Node stage builds `static/output.css`, then the Python stage runs gunicorn.
 [docker/backend-entrypoint.sh](docker/backend-entrypoint.sh) waits for Postgres, then runs
 `migrate` and `collectstatic` before the server starts.
+[frontend/Dockerfile](frontend/Dockerfile) is two-stage the same way: Node runs `pnpm run build`,
+then `nginx:alpine` serves `dist` with an SPA fallback ([frontend/nginx.conf](frontend/nginx.conf))
+so a hard refresh on `/subjects/<slug>` still gets `index.html`.
 
 ```bash
 make dock       # down, build, up, follow logs (uses .env.docker)
 ./update.sh     # git pull → build → up → migrate, for an existing box
 ```
 
-The SPA is **not** in the compose file — build it separately with
-`cd frontend && pnpm run build` and serve `frontend/dist` from your static host or CDN.
+Published host ports: backend **8012** (`8012:8000` — the container and gunicorn still listen on
+8000), frontend **3012** (`3012:3000`). Postgres publishes nothing; the backend reaches it over
+the compose network as `POSTGRES_HOST=postgres`.
+
+`VITE_API_URL` and `VITE_GOOGLE_CLIENT_ID` are **build args**, inlined into the bundle by vite —
+changing one needs `docker compose build frontend`, not a restart. `VITE_API_URL` is the URL the
+*browser* calls (`http://localhost:8012`), not `http://backend:8000`. Since the SPA is served
+from a different origin than the API, `DJANGO_CORS_ALLOWED_ORIGINS` must list the frontend origin
+(`http://localhost:3012`) or every fetch fails CORS.
 
 The daily crawl is a host cron job, not a container:
 
