@@ -14,5 +14,4 @@ static/output.css
 *.egg-info/
 .pytest_cache/
 .ruff_cache/
-frontend/src/routeTree.gen.ts
 .playwright-mcp/
