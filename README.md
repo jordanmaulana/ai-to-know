@@ -30,7 +30,7 @@ Hacker News (Algolia API)
   free prefilter          points floor (--min-points 40) + AI keyword hit
         │                 + skip any hn_id already in CrawlCandidate
         ▼
-  Claude judge            one API call per survivor; system = RUBRIC + index of
+  OpenAI judge            one API call per survivor; instructions = RUBRIC + index of
         │                 existing subjects; json_schema output
         │                 → accepted / rejected_llm / duplicate
         ▼
@@ -45,7 +45,7 @@ Hacker News (Algolia API)
 Every story the crawler looks at is recorded as a `CrawlCandidate` keyed by a unique `hn_id`,
 so no story is ever fetched, judged, or paid for twice. The prefilter is free — only survivors
 cost an API call. `make crawl-dry` runs the prefilter alone: no API calls, nothing written.
-Without `ANTHROPIC_API_KEY` the crawl still fetches and prefilters, leaves the survivors
+Without `OPENAI_API_KEY` the crawl still fetches and prefilters, leaves the survivors
 unjudged, and picks them up on the next run once the key is set.
 
 **Nothing the crawler produces is public.** Accepted stories become drafts. A draft reaches
@@ -143,7 +143,7 @@ Everything is read from `.env` — see [.env.example](.env.example) for the full
 - **Django** — `SECRET_KEY`, `DEBUG`, `DJANGO_ALLOWED_HOSTS`, `DJANGO_CORS_ALLOWED_ORIGINS`
   (also used verbatim for `CSRF_TRUSTED_ORIGINS`)
 - **Database** — `POSTGRES_DB/USER/PASSWORD/HOST/PORT`. Leave `POSTGRES_HOST` empty for SQLite.
-- **Crawler** — `ANTHROPIC_API_KEY`, `SYLLABUS_CRAWLER_MODEL` (default `claude-opus-5`)
+- **Crawler** — `OPENAI_API_KEY`, `SYLLABUS_CRAWLER_MODEL` (default `gpt-5.6`)
 - **Auth** — `GOOGLE_OAUTH_CLIENT_ID` for the Google sign-in button
 - **Payments** — `MAYAR_API_KEY`, `MAYAR_WEBHOOK_TOKEN`, `MAYAR_BASE_URL`, `PAYMENT_REDIRECT_URL`
 - **URLs** — `SITE_URL`, `FRONTEND_URL` (the CMS builds its "view public page" links from this)

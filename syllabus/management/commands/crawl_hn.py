@@ -1,6 +1,6 @@
 """Daily Hacker News crawl: propose new syllabus subjects, as drafts.
 
-Pipeline: fetch -> free keyword prefilter -> one Claude call per survivor -> draft Subject.
+Pipeline: fetch -> free keyword prefilter -> one OpenAI call per survivor -> draft Subject.
 Every story we look at is recorded in CrawlCandidate keyed by its HN id, so a story is
 never fetched, judged, or paid for twice.
 """
@@ -93,7 +93,7 @@ SUBJECT_SCHEMA = {
             "wildly impractical before, and is not already covered by an existing subject.",
         },
         "duplicate_of_slug": {
-            "anyOf": [{"type": "string"}, {"type": "null"}],
+            "type": ["string", "null"],
             "description": "Slug of the existing subject this duplicates, or null.",
         },
         "reason": {
@@ -176,7 +176,7 @@ class Command(BaseCommand):
         if client is None:
             self.stdout.write(
                 self.style.WARNING(
-                    f"ANTHROPIC_API_KEY is not set — {len(batch)} candidate(s) left unjudged. "
+                    f"OPENAI_API_KEY is not set — {len(batch)} candidate(s) left unjudged. "
                     "They will be picked up on the next run once the key is configured."
                 )
             )
@@ -253,33 +253,25 @@ class Command(BaseCommand):
     # --- judge -------------------------------------------------------------
 
     def get_client(self):
-        if not settings.ANTHROPIC_API_KEY:
+        if not settings.OPENAI_API_KEY:
             return None
-        import anthropic
+        import openai
 
-        return anthropic.Anthropic(api_key=settings.ANTHROPIC_API_KEY)
+        return openai.OpenAI(api_key=settings.OPENAI_API_KEY)
 
     def subject_index(self):
         rows = Subject.objects.values_list("slug", "title", "one_liner")
         return "\n".join(f"- {slug}: {title} — {one_liner}" for slug, title, one_liner in rows)
 
     def judge(self, client, story, index):
-        response = client.messages.create(
+        # RUBRIC + index lead the instructions so OpenAI's automatic prefix caching can hit;
+        # there is no explicit cache marker to set.
+        response = client.responses.create(
             model=settings.SYLLABUS_CRAWLER_MODEL,
-            max_tokens=2000,
-            system=[
-                {"type": "text", "text": RUBRIC},
-                {
-                    "type": "text",
-                    "text": f"Subjects already in the syllabus:\n{index}",
-                    "cache_control": {"type": "ephemeral"},
-                },
-            ],
-            output_config={
-                "effort": "low",
-                "format": {"type": "json_schema", "schema": SUBJECT_SCHEMA},
-            },
-            messages=[
+            max_output_tokens=4000,
+            reasoning={"effort": "low"},
+            instructions=f"{RUBRIC}\n\nSubjects already in the syllabus:\n{index}",
+            input=[
                 {
                     "role": "user",
                     "content": (
@@ -290,15 +282,29 @@ class Command(BaseCommand):
                     ),
                 }
             ],
+            text={
+                "format": {
+                    "type": "json_schema",
+                    "name": "syllabus_subject",
+                    "strict": True,
+                    "schema": SUBJECT_SCHEMA,
+                }
+            },
         )
 
-        if response.stop_reason == "refusal":
+        # Reasoning tokens count against max_output_tokens, so a truncated run is possible.
+        if response.status == "incomplete":
+            raise RuntimeError(f"incomplete response: {response.incomplete_details.reason}")
+
+        # output[] holds reasoning items too — only the message item carries the JSON.
+        message = next((item for item in response.output if item.type == "message"), None)
+        part = message.content[0] if message and message.content else None
+        if part is None or part.type == "refusal":
             self.record(story, Verdict.REJECTED_LLM, "Model declined to judge this story.")
             self.stdout.write(f"  - {story['title']} (declined)")
             return None
 
-        text = next((b.text for b in response.content if b.type == "text"), "")
-        data = json.loads(text)
+        data = json.loads(part.text)
 
         if data.get("duplicate_of_slug"):
             self.record(story, Verdict.DUPLICATE, data.get("reason", ""))

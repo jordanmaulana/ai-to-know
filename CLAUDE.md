@@ -62,7 +62,7 @@ rendered for humans at `/dashboard/editorial/` and used verbatim as the crawler'
 - **Seed content**: `syllabus/seed_data.py`, loaded with `make seed` (idempotent;
   `--reset` removes them). Hand-written subjects are published immediately.
 - **Crawler**: `make crawl` — pulls the Hacker News front page via the Algolia API,
-  drops anything off-topic or below the points floor for free, then spends one Claude call
+  drops anything off-topic or below the points floor for free, then spends one OpenAI call
   per survivor to judge novelty against the existing subject index. Accepted stories become
   **drafts**; nothing reaches the public site until someone publishes it in the CMS.
   `make crawl-dry` runs the prefilter only — no API calls, nothing written.
