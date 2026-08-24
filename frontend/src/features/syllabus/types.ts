@@ -53,6 +53,17 @@ export const STATUS_OPTIONS: {
   { value: "mastered", label: "I mastered this", short: "Mastered" },
 ];
 
+/**
+ * Pill colours per status, shared by the detail-page picker and the card badge.
+ * Complete literal strings — Tailwind never sees a class assembled from a variable.
+ */
+export const STATUS_PILL: Record<SubjectStatus, string> = {
+  new: "border-rule bg-card text-muted hover:border-ink/20 hover:text-ink",
+  practicing: "border-accent/40 bg-accent-soft text-accent",
+  tried: "border-accent/40 bg-accent-soft text-accent",
+  mastered: "border-ink bg-ink text-paper",
+};
+
 export const CATEGORIES: { slug: CategorySlug; label: string }[] = [
   { slug: "build", label: "Build software" },
   { slug: "automate", label: "Automate work" },

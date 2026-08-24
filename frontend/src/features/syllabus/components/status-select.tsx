@@ -1,16 +1,8 @@
 import { ChevronDown } from "lucide-react";
 
 import { cn } from "@/lib/utils";
-import { STATUS_OPTIONS } from "@/features/syllabus/types";
+import { STATUS_OPTIONS, STATUS_PILL } from "@/features/syllabus/types";
 import type { SubjectStatus } from "@/features/syllabus/types";
-
-// Complete literal strings — Tailwind never sees a class assembled from a variable.
-const PILL: Record<SubjectStatus, string> = {
-  new: "border-rule bg-card text-muted hover:border-ink/20 hover:text-ink",
-  practicing: "border-accent/40 bg-accent-soft text-accent",
-  tried: "border-accent/40 bg-accent-soft text-accent",
-  mastered: "border-ink bg-ink text-paper",
-};
 
 interface StatusSelectProps {
   status: SubjectStatus;
@@ -26,7 +18,7 @@ export function StatusSelect({ status, onChange, subjectTitle }: StatusSelectPro
     <label
       className={cn(
         "relative inline-flex cursor-pointer items-center rounded-full border py-2 pr-9 pl-4 font-mono text-[0.6875rem] tracking-widest uppercase transition-colors focus-within:border-accent focus-within:ring-2 focus-within:ring-accent/25",
-        PILL[status],
+        STATUS_PILL[status],
       )}
     >
       <span className="sr-only">Your progress on {subjectTitle}</span>
