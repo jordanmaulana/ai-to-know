@@ -1,5 +1,6 @@
 services:
   postgres:
+    restart: unless-stopped
     image: postgres:16-alpine
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-app}
@@ -19,6 +20,7 @@ services:
           memory: 512M
 
   backend:
+    restart: unless-stopped
     build:
       context: .
       dockerfile: Dockerfile.backend
@@ -69,6 +71,7 @@ services:
           memory: 384M
 
   frontend:
+    restart: unless-stopped
     build:
       context: ./frontend
       # VITE_* are baked into the bundle at build time — changing one needs a rebuild,
