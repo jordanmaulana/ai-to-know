@@ -1,3 +1,8 @@
 node_modules
 dist
-.env*
+.tanstack
+.git
+.env
+.env.*
+Dockerfile
+.dockerignore

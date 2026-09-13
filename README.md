@@ -121,7 +121,7 @@ All from the [Makefile](Makefile).
 
 | Command | What it does |
 |---|---|
-| `make dev` | Django dev server on :8000 |
+| `make dev` | Django on :8000 + Vite on :5173 together |
 | `make web` | Frontend dev server (`pnpm run dev`) |
 | `make mmg` / `make migrate` | Make / apply migrations |
 | `make seed` | Load the hand-written subjects |
@@ -132,6 +132,8 @@ All from the [Makefile](Makefile).
 | `make test` | `manage.py test` (CMS coverage in `syllabus/tests.py`) |
 | `make lint` | `ruff format` + `ruff check --fix` |
 | `make dock` | Full docker compose stack |
+| `make sh` / `make mg CMD=…` | Shell / `manage.py` in the running backend |
+| `make backup` | `pg_dump` → `backups/*.sql.gz`, keeps the last 14 |
 | `make upgrade` | `uv sync` + `uv lock --upgrade` |
 
 Frontend build / typecheck: `cd frontend && pnpm run build`.
@@ -173,19 +175,21 @@ Syllabus writes have no API. Content is created and published in the CMS, by des
 
 `docker compose` runs Postgres, the backend and the SPA. [Dockerfile.backend](Dockerfile.backend)
 is two-stage: a Node stage builds `static/output.css`, then the Python stage runs gunicorn.
-[docker/backend-entrypoint.sh](docker/backend-entrypoint.sh) waits for Postgres, then runs
-`migrate` and `collectstatic` before the server starts.
+It runs non-root with the venv on `PATH` (no uv at runtime).
+[docker/backend-entrypoint.sh](docker/backend-entrypoint.sh) runs `migrate` and `collectstatic`
+before the server starts; compose's `depends_on: service_healthy` gates it on Postgres.
 [frontend/Dockerfile](frontend/Dockerfile) is two-stage the same way: Node runs `pnpm run build`,
 then `nginx:alpine` serves `dist` with an SPA fallback ([frontend/nginx.conf](frontend/nginx.conf))
 so a hard refresh on `/subjects/<slug>` still gets `index.html`.
 
 ```bash
 make dock       # down, build, up, follow logs (uses .env.docker)
-./update.sh     # git pull → build → up → migrate, for an existing box
+./update.sh     # git pull → build → up (entrypoint migrates), for an existing box
 ```
 
-Published host ports: backend **8012** (`8012:8000` — the container and gunicorn still listen on
-8000), frontend **3012** (`3012:3000`). Postgres publishes nothing; the backend reaches it over
+Published host ports, **loopback only**: backend **8012** (`127.0.0.1:8012:8000` — the container
+and gunicorn still listen on 8000), frontend **3012** (`127.0.0.1:3012:3000`). Point the tunnel
+at those. Postgres publishes nothing; the backend reaches it over
 the compose network as `POSTGRES_HOST=postgres`.
 
 `VITE_API_URL` and `VITE_GOOGLE_CLIENT_ID` are **build args**, inlined into the bundle by vite —
@@ -194,11 +198,13 @@ changing one needs `docker compose build frontend`, not a restart. `VITE_API_URL
 from a different origin than the API, `DJANGO_CORS_ALLOWED_ORIGINS` must list the frontend origin
 (`http://localhost:3012`) or every fetch fails CORS.
 
-The daily crawl is a host cron job, not a container:
+Copy [.env.docker.example](.env.docker.example) to `.env.docker`. Postgres creds are required —
+a bare `docker compose up` without `--env-file` aborts rather than initdb'ing a wrong cluster.
 
-```cron
-0 8 * * * cd /path/to/repo && /usr/bin/make crawl >> /tmp/hn-crawl.log 2>&1
-```
+The daily crawl is the `cron` compose service (supercronic over [docker/crontab](docker/crontab)),
+not host cron. Logs: `docker compose logs cron`. Manual run: `make crawl-docker`.
+
+Backups: `make backup` from a host cron, e.g. `0 3 * * * cd /path/to/repo && make backup`.
 
 ## Notes and gotchas
 

@@ -111,7 +111,7 @@ token auth the SPA uses.
 
 ## Dev commands (Makefile)
 
-- `make dev` — Django dev server on :8000.
+- `make dev` — Django on :8000 (CMS at `/dashboard/`) + Vite on :5173 (proxies `/api`) together; Ctrl-C stops both.
 - `make web` — frontend dev server (`pnpm run dev`).
 - `make migrate` / `make mmg` — apply / make migrations.
 - `make seed` — load the hand-written syllabus subjects.
@@ -122,5 +122,11 @@ token auth the SPA uses.
   a missing `output.css` into a 500, so the order matters).
 - `make test` — `manage.py test` (CMS coverage lives in `syllabus/tests.py`).
 - `make lint` — `ruff format` + `ruff check --fix`.
-- `make dock` — full docker compose stack.
+- `make dock` — full docker compose stack. Always via `make dock` / `./update.sh`, never a bare
+  `docker compose up`: postgres creds are `${VAR:?}`-required and reach interpolation only via
+  `--env-file .env.docker` (see `.env.docker.example` for the initdb-once trap).
+- Against the running stack: `make sh` (shell), `make mg CMD="createsuperuser"`, `make backup`
+  (→ `backups/*.sql.gz`, keeps 14; add a host cron to run it). The image runs non-root with the
+  venv on `PATH` and **no uv**, so exec commands are `python manage.py ...`. Ports publish on
+  `127.0.0.1` only (backend 8012, SPA 3012) — the tunnel connects from the host.
 - Frontend build/typecheck: `cd frontend && pnpm run build`.

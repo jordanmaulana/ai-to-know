@@ -12,11 +12,18 @@ FROM python:3.12-slim AS app
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     UV_LINK_MODE=copy \
-    UV_COMPILE_BYTECODE=1
+    UV_COMPILE_BYTECODE=1 \
+    HOME=/home/app \
+    PATH="/app/.venv/bin:$PATH"
+# PATH puts the venv first so `gunicorn` / `python manage.py ...` work directly.
+# `uv run` revalidates the lock on every invocation — build-time only, not runtime.
+# No build-essential: every dep ships a manylinux wheel for py3.12 (psycopg[binary]
+# bundles libpq) and bson's sdist is pure Python. If a future dep needs a compiler,
+# `uv sync` below fails loudly — add it back then.
 # tzdata: the image is UTC but settings.TIME_ZONE is Asia/Jakarta — without it the `TZ`
 # env the cron service sets is ignored and the crontab fires 7h off.
 RUN apt-get update && apt-get install -y --no-install-recommends \
-      build-essential libpq5 curl ca-certificates tzdata && \
+      libpq5 curl ca-certificates tzdata && \
     rm -rf /var/lib/apt/lists/*
 
 # supercronic — cron for the `cron` compose service (ROLE=cron). Vanilla cron scrubs the
@@ -36,18 +43,24 @@ RUN set -eux; \
     echo "${sha1}  /usr/local/bin/supercronic" | sha1sum -c -; \
     chmod +x /usr/local/bin/supercronic
 
-COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
+COPY --chmod=755 docker/backend-entrypoint.sh /entrypoint.sh
+# Non-root. Everything under /app is created already owned by `app`, via --chown
+# below: a `chown -R app /app` after the fact rewrites the whole venv into an extra layer.
+RUN useradd --create-home --uid 10001 app && mkdir -p /app && chown app:app /app
 WORKDIR /app
-COPY pyproject.toml uv.lock ./
-RUN uv sync --frozen --no-install-project
-COPY . .
-COPY --from=tw /app/static/output.css ./static/output.css
+USER app
+COPY --chown=app:app pyproject.toml uv.lock ./
+# uv is mounted for this one command rather than COPYed into the image: it is a
+# build-time tool only (the venv is on PATH at runtime).
+RUN --mount=from=ghcr.io/astral-sh/uv:latest,source=/uv,target=/usr/local/bin/uv \
+    uv sync --frozen --no-install-project
+COPY --chown=app:app . .
+COPY --from=tw --chown=app:app /app/static/output.css ./static/output.css
+# The entrypoint collectstatics into staticfiles/, so /app stays writable by `app`.
 RUN rm -f static/input.css
-COPY docker/backend-entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh
 EXPOSE 8000
 ENTRYPOINT ["/entrypoint.sh"]
-CMD ["uv", "run", "gunicorn", "core.wsgi", \
+CMD ["gunicorn", "core.wsgi", \
      "--bind", "0.0.0.0:8000", \
      "--workers", "3", \
      "--worker-class", "gthread", \

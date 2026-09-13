@@ -156,6 +156,15 @@ CORS_ALLOWED_ORIGINS = [
 ]
 CSRF_TRUSTED_ORIGINS = list(CORS_ALLOWED_ORIGINS)
 
+# Behind cloudflared, Django only learns the request was HTTPS from this header —
+# without it the CMS login POST's https Origin fails the CSRF check. No
+# SECURE_SSL_REDIRECT: TLS terminates upstream, so redirecting here risks a loop.
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+
+if not DEBUG:
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 LOGGING = {

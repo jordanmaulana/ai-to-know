@@ -1,11 +1,22 @@
+# Docker's default json-file driver is unbounded and gunicorn writes an access log
+# line per request, so a long-running VPS otherwise fills its disk with logs.
+x-logging: &logging
+  driver: json-file
+  options: {max-size: "10m", max-file: "3"}
+
 services:
   postgres:
-    restart: unless-stopped
     image: postgres:16-alpine
+    restart: unless-stopped
+    logging: *logging
     environment:
-      POSTGRES_DB: ${POSTGRES_DB:-app}
-      POSTGRES_USER: ${POSTGRES_USER:-app}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-app}
+      # `:?` = required. `.env.docker` only reaches interpolation via --env-file, so a
+      # bare `docker compose up` aborts here instead of initdb'ing a cluster with
+      # throwaway defaults that the backend then cannot log into. initdb runs only
+      # once on an empty data dir, so that mistake is not fixable by a restart.
+      POSTGRES_DB: ${POSTGRES_DB:?missing — run `make dock`, or pass --env-file .env.docker}
+      POSTGRES_USER: ${POSTGRES_USER:?missing — run `make dock`, or pass --env-file .env.docker}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?missing — run `make dock`, or pass --env-file .env.docker}
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
@@ -20,22 +31,32 @@ services:
           memory: 512M
 
   backend:
-    restart: unless-stopped
     build:
       context: .
       dockerfile: Dockerfile.backend
+    restart: unless-stopped
+    logging: *logging
     env_file: .env.docker
     environment:
       ROLE: web
       POSTGRES_HOST: postgres
+      # `environment:` wins over `env_file:`, so these and the postgres service above
+      # resolve from ONE source and cannot drift. Don't delete them to "let .env.docker
+      # handle it": env_file is honored unconditionally while interpolation needs
+      # --env-file, and that asymmetry is exactly what creates a cluster owned by a
+      # role the backend never asks for.
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     ports:
-      # Host 8012 (8000 is taken by another stack); container side stays 8000 —
-      # the healthcheck below and gunicorn's --bind both target the internal port.
-      - "8012:8000"
+      # Loopback only — the tunnel connects from the host. Publishing on 0.0.0.0 would
+      # expose Django on the VPS public IP over plain HTTP. Host 8012 (8000 is taken by
+      # another stack); gunicorn and the healthcheck stay on container port 8000.
+      - "127.0.0.1:8012:8000"
     depends_on:
       postgres: {condition: service_healthy}
     healthcheck:
-      test: ["CMD", "curl", "-fsS", "http://localhost:8000/login/"]
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8000/login/"]
       interval: 30s
       timeout: 3s
       retries: 5
@@ -47,20 +68,24 @@ services:
           memory: 768M
 
   # Daily HN crawl. Same image as `backend`, ROLE=cron so the entrypoint skips
-  # migrate/collectstatic (no race with the web container) but still waits for postgres.
+  # migrate/collectstatic (no race with the web container).
   cron:
     build:
       context: .
       dockerfile: Dockerfile.backend
+    restart: unless-stopped
+    logging: *logging
     env_file: .env.docker
     environment:
       ROLE: cron
       POSTGRES_HOST: postgres
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       # Drives the crontab's wall clock; must match settings.TIME_ZONE.
       TZ: ${TZ:-Asia/Jakarta}
     # Overrides the image CMD (gunicorn); the ENTRYPOINT still runs.
     command: ["supercronic", "/app/docker/crontab"]
-    restart: unless-stopped
     depends_on:
       postgres: {condition: service_healthy}
     # No healthcheck: supercronic serves nothing. Liveness is `docker compose logs cron`.
@@ -71,22 +96,26 @@ services:
           memory: 384M
 
   frontend:
-    restart: unless-stopped
     build:
       context: ./frontend
       # VITE_* are baked into the bundle at build time — changing one needs a rebuild,
       # not a restart. Values come from the --env-file the Makefile passes.
       args:
         VITE_API_URL: ${VITE_API_URL}
-        VITE_GOOGLE_CLIENT_ID: ${VITE_GOOGLE_CLIENT_ID}
+        VITE_GOOGLE_CLIENT_ID: ${VITE_GOOGLE_CLIENT_ID-}
+    restart: unless-stopped
+    logging: *logging
     ports:
-      # Host 3012 (3000/3001/3003/3005/3007/3010 are taken); nginx listens on 3000 inside.
-      - "3012:3000"
+      # Loopback only, like backend. Host 3012 (3000/3001/3003/3005/3007/3010 are taken);
+      # nginx listens on 3000 inside.
+      - "127.0.0.1:3012:3000"
     depends_on:
-      backend: {condition: service_started}
+      backend: {condition: service_healthy}
     healthcheck:
-      # nginx:alpine ships busybox wget, not curl.
-      test: ["CMD", "wget", "-qO-", "http://localhost:3000/"]
+      # 127.0.0.1, not localhost: in this image localhost resolves to ::1 while nginx
+      # listens on IPv4 only, and busybox wget does not fall back — so `localhost` here
+      # reports unhealthy forever while the site is fine.
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1:3000/"]
       interval: 30s
       timeout: 3s
       retries: 5
@@ -95,7 +124,7 @@ services:
       resources:
         limits:
           cpus: "0.5"
-          memory: 256M
+          memory: 128M
 
 volumes:
   pgdata:
