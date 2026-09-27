@@ -5,7 +5,6 @@ Every story we look at is recorded in CrawlCandidate keyed by its HN id, so a st
 never fetched, judged, or paid for twice.
 """
 
-import json
 import logging
 import re
 import time
@@ -13,10 +12,10 @@ import time
 import httpx
 from django.conf import settings
 from django.core.management.base import BaseCommand
-from django.utils.text import slugify
 
+from syllabus import judge
 from syllabus.editorial import RUBRIC
-from syllabus.models import Category, CrawlCandidate, Status, Subject, Verdict
+from syllabus.models import CrawlCandidate, Verdict
 
 logger = logging.getLogger(__name__)
 
@@ -84,51 +83,6 @@ KEYWORDS = {
     "gpu",
 }
 
-SUBJECT_SCHEMA = {
-    "type": "object",
-    "properties": {
-        "is_new_subject": {
-            "type": "boolean",
-            "description": "True only if this unlocks something that was impossible or "
-            "wildly impractical before, and is not already covered by an existing subject.",
-        },
-        "duplicate_of_slug": {
-            "type": ["string", "null"],
-            "description": "Slug of the existing subject this duplicates, or null.",
-        },
-        "reason": {
-            "type": "string",
-            "description": "One or two sentences justifying the verdict.",
-        },
-        "title": {"type": "string"},
-        "slug": {"type": "string", "description": "lowercase-hyphenated, max 60 chars"},
-        "one_liner": {"type": "string", "description": "What it is, one plain sentence."},
-        "what_you_can_build": {
-            "type": "string",
-            "description": "3-4 concrete things, one per line, no bullet characters.",
-        },
-        "before_this": {"type": "string", "description": "How people did this before."},
-        "why_new": {
-            "type": "string",
-            "description": "What specifically was impossible or impractical before.",
-        },
-        "category": {"type": "string", "enum": [c.value for c in Category]},
-    },
-    "required": [
-        "is_new_subject",
-        "duplicate_of_slug",
-        "reason",
-        "title",
-        "slug",
-        "one_liner",
-        "what_you_can_build",
-        "before_this",
-        "why_new",
-        "category",
-    ],
-    "additionalProperties": False,
-}
-
 
 class Command(BaseCommand):
     help = "Crawl Hacker News for genuinely new AI subjects and file them as drafts."
@@ -172,7 +126,7 @@ class Command(BaseCommand):
             self.stdout.write(self.style.SUCCESS("Nothing new worth judging today."))
             return
 
-        client = self.get_client()
+        client = judge.get_client()
         if client is None:
             self.stdout.write(
                 self.style.WARNING(
@@ -182,7 +136,7 @@ class Command(BaseCommand):
             )
             return
 
-        index = self.subject_index()
+        index = judge.subject_index()
         accepted = 0
         for story in batch:
             try:
@@ -252,17 +206,6 @@ class Command(BaseCommand):
 
     # --- judge -------------------------------------------------------------
 
-    def get_client(self):
-        if not settings.OPENAI_API_KEY:
-            return None
-        import openai
-
-        return openai.OpenAI(api_key=settings.OPENAI_API_KEY)
-
-    def subject_index(self):
-        rows = Subject.objects.values_list("slug", "title", "one_liner")
-        return "\n".join(f"- {slug}: {title} — {one_liner}" for slug, title, one_liner in rows)
-
     def judge(self, client, story, index):
         # RUBRIC + index lead the instructions so OpenAI's automatic prefix caching can hit;
         # there is no explicit cache marker to set.
@@ -282,29 +225,14 @@ class Command(BaseCommand):
                     ),
                 }
             ],
-            text={
-                "format": {
-                    "type": "json_schema",
-                    "name": "syllabus_subject",
-                    "strict": True,
-                    "schema": SUBJECT_SCHEMA,
-                }
-            },
+            text=judge.json_format("syllabus_subject", judge.SUBJECT_SCHEMA),
         )
 
-        # Reasoning tokens count against max_output_tokens, so a truncated run is possible.
-        if response.status == "incomplete":
-            raise RuntimeError(f"incomplete response: {response.incomplete_details.reason}")
-
-        # output[] holds reasoning items too — only the message item carries the JSON.
-        message = next((item for item in response.output if item.type == "message"), None)
-        part = message.content[0] if message and message.content else None
-        if part is None or part.type == "refusal":
+        data = judge.parse(response)
+        if data is None:
             self.record(story, Verdict.REJECTED_LLM, "Model declined to judge this story.")
             self.stdout.write(f"  - {story['title']} (declined)")
             return None
-
-        data = json.loads(part.text)
 
         if data.get("duplicate_of_slug"):
             self.record(story, Verdict.DUPLICATE, data.get("reason", ""))
@@ -316,33 +244,12 @@ class Command(BaseCommand):
             self.stdout.write(f"  - {story['title']}")
             return None
 
-        subject = self.create_draft(data, story)
+        subject = judge.create_draft(data, story["url"])
         self.record(story, Verdict.ACCEPTED, data.get("reason", ""), subject=subject)
         self.stdout.write(self.style.SUCCESS(f"  + draft: {subject.slug} — {subject.title}"))
         return subject
 
     # --- persistence -------------------------------------------------------
-
-    def create_draft(self, data, story):
-        base = slugify(data.get("slug") or data["title"])[:60] or "untitled"
-        slug, n = base, 2
-        while Subject.objects.filter(slug=slug).exists():
-            slug = f"{base[:57]}-{n}"
-            n += 1
-        category = data.get("category")
-        if category not in Category.values:
-            category = Category.BUILD
-        return Subject.objects.create(
-            slug=slug,
-            title=data["title"][:160],
-            one_liner=data["one_liner"][:300],
-            what_you_can_build=data["what_you_can_build"],
-            before_this=data["before_this"],
-            why_new=data["why_new"],
-            category=category,
-            status=Status.DRAFT,
-            source_url=story["url"],
-        )
 
     def record(self, story, verdict, reason, subject=None):
         CrawlCandidate.objects.update_or_create(

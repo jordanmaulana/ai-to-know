@@ -15,5 +15,8 @@ urlpatterns = [
         name="subject_publish",
     ),
     path("queue/", views.QueueView.as_view(), name="queue"),
+    path("research/", views.ResearchView.as_view(), name="research"),
+    path("research/<str:pk>/", views.ResearchDetailView.as_view(), name="research_detail"),
+    path("research/<str:pk>/draft/", views.ResearchDraftView.as_view(), name="research_draft"),
     path("editorial/", views.EditorialView.as_view(), name="editorial"),
 ]

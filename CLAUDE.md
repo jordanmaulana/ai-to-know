@@ -71,6 +71,13 @@ rendered for humans at `/dashboard/editorial/` and used verbatim as the crawler'
   dockerized box `make crawl` from the host reads `.env`, finds no `POSTGRES_HOST`, and writes
   to a throwaway sqlite file. Logs: `docker compose logs cron`. Editing the schedule needs a
   container restart. Manual run against the stack: `make crawl-docker`.
+- **Research**: `/dashboard/research/` — an editor types a topic (+ optional link); one OpenAI
+  *background* response with `web_search` judges it against `RESEARCH_RUBRIC`. No worker: the
+  POST stores `response_id`, and loading the research pages calls `judge.refresh()`, which
+  collects the result (the detail page meta-refreshes while it runs). Accepted → draft, same as
+  the crawler; rejected keeps the model's copy in `TopicResearch.result` for "Draft anyway".
+  Shared OpenAI code (schema, parse, `create_draft`, `safe_url`) lives in `syllabus/judge.py`;
+  every model-supplied URL goes through `safe_url` because it can reach public links.
 - **CMS** (superuser only, server-rendered Django templates — see below): `/dashboard/` stats,
   `/dashboard/subjects/?status=draft` the review queue for drafts, `/dashboard/queue/` every
   HN story the crawler judged, `/dashboard/editorial/` the rules. `/admin/` stays wired as the

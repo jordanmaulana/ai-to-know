@@ -1,0 +1,58 @@
+{% extends "dashboard_base.html" %}
+{% load humanize %}
+
+{% block title %}Research{% endblock %}
+{% block heading %}Research a topic{% endblock %}
+{% block subheading %}Type a topic and the model searches the web, then judges it against the editorial bar. Accepted topics are filed as drafts.{% endblock %}
+
+{% block content %}
+  <form method="post" class="grid gap-4 rounded-xl border border-rule bg-card p-5 sm:grid-cols-[2fr_1fr_auto] sm:items-end">
+    {% csrf_token %}
+    {% include "_partials/field.html" with field=form.topic %}
+    {% include "_partials/field.html" with field=form.url %}
+    <button type="submit"
+            class="rounded-md bg-ink px-4 py-2 font-mono text-[0.6875rem] tracking-widest text-paper uppercase transition hover:opacity-85">
+      Research
+    </button>
+  </form>
+
+  {% if page_obj.object_list %}
+    <div class="mt-6 overflow-hidden rounded-xl border border-rule bg-card">
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="border-b border-rule text-left font-mono text-[0.6875rem] tracking-widest text-muted uppercase">
+            <th class="px-4 py-3 font-normal">Topic</th>
+            <th class="px-4 py-3 font-normal">Verdict</th>
+            <th class="px-4 py-3 font-normal">Subject</th>
+            <th class="px-4 py-3 font-normal">Asked</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-rule">
+          {% for research in page_obj.object_list %}
+            <tr class="align-top">
+              <td class="px-4 py-3">
+                <a href="{% url 'cms:research_detail' pk=research.pk %}" class="font-medium text-ink hover:text-accent">{{ research.topic }}</a>
+                <div class="mt-1 max-w-xl text-xs leading-relaxed text-muted">{{ research.reason|default:research.error|default:"—" }}</div>
+              </td>
+              <td class="px-4 py-3">{% include "_partials/research_pill.html" %}</td>
+              <td class="px-4 py-3 text-sm">
+                {% if research.subject %}
+                  <a href="{% url 'cms:subject_edit' slug=research.subject.slug %}" class="text-accent underline underline-offset-4">{{ research.subject.title|truncatechars:40 }}</a>
+                {% else %}
+                  <span class="text-muted">—</span>
+                {% endif %}
+              </td>
+              <td class="px-4 py-3 text-xs whitespace-nowrap text-muted">{{ research.created_on|naturaltime }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    {% include "_partials/pagination.html" %}
+  {% else %}
+    <div class="mt-6">
+      {% include "_partials/empty_state.html" with message="Nothing researched yet. Type a topic above." %}
+    </div>
+  {% endif %}
+{% endblock %}

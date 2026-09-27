@@ -1,13 +1,25 @@
+import json
 from datetime import date
 from io import StringIO
+from types import SimpleNamespace
+from unittest.mock import MagicMock, patch
 
 from django.contrib.auth.models import User
 from django.core.management import call_command
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from django.urls import reverse
 
 from syllabus.forms import SubjectForm
-from syllabus.models import Category, Status, Subject
+from syllabus.management.commands.crawl_hn import Command as CrawlCommand
+from syllabus.models import (
+    Category,
+    CrawlCandidate,
+    ResearchStatus,
+    Status,
+    Subject,
+    TopicResearch,
+    Verdict,
+)
 from syllabus.seed_data import SUBJECTS
 
 VALID = {
@@ -135,7 +147,7 @@ class CMSTests(TestCase):
 
     def test_every_page_renders(self):
         make_subject()
-        for name in ["cms:dashboard", "cms:subjects", "cms:queue", "cms:editorial"]:
+        for name in ["cms:dashboard", "cms:subjects", "cms:queue", "cms:research", "cms:editorial"]:
             self.assertEqual(self.client.get(reverse(name)).status_code, 200, name)
 
     def test_list_filters_by_status_category_and_search(self):
@@ -205,6 +217,173 @@ class CMSTests(TestCase):
         self.assertEqual(
             self.client.get(reverse("cms:subject_edit", kwargs={"slug": "nope"})).status_code, 404
         )
+
+
+def model_verdict(**overrides):
+    data = {
+        "is_new_subject": True,
+        "duplicate_of_slug": None,
+        "reason": "Nothing could drive a desktop app from a sentence before.",
+        "title": "Computer use",
+        "slug": "computer-use",
+        "one_liner": "A model that works your screen with a mouse and keyboard.",
+        "what_you_can_build": "Fill a web form from a spreadsheet\nFile expenses in an old portal",
+        "before_this": "You clicked through it yourself.",
+        "why_new": "Automation needed an API the app never had.",
+        "category": "agents",
+        "became_usable_on": "2024-10-22",
+        "date_note": "",
+        "source_url": "https://example.com/launch",
+        "resource_url": "https://example.com/docs",
+        "sources": ["https://example.com/launch"],
+    }
+    data.update(overrides)
+    return data
+
+
+def model_response(data=None, status="completed"):
+    """The shape judge.parse walks: reasoning and search items first, then the message."""
+    content = [SimpleNamespace(type="output_text", text=json.dumps(data))] if data else []
+    return SimpleNamespace(
+        id="resp_1",
+        status=status,
+        error=SimpleNamespace(message="boom") if status == "failed" else None,
+        incomplete_details=None,
+        output=[
+            SimpleNamespace(type="web_search_call"),
+            SimpleNamespace(type="message", content=content),
+        ],
+    )
+
+
+def fake_client(retrieved=None):
+    client = MagicMock()
+    client.responses.create.return_value = SimpleNamespace(id="resp_1")
+    client.responses.retrieve.return_value = retrieved
+    return client
+
+
+class ResearchTests(TestCase):
+    def setUp(self):
+        User.objects.create_superuser(username="boss", email="boss@example.com", password="pw")
+        self.client.login(username="boss", password="pw")
+
+    def running(self):
+        return TopicResearch.objects.create(topic="computer use", response_id="resp_1")
+
+    def detail(self, research):
+        return self.client.get(reverse("cms:research_detail", kwargs={"pk": research.pk}))
+
+    @override_settings(OPENAI_API_KEY="")
+    def test_without_a_key_nothing_is_saved(self):
+        response = self.client.post(reverse("cms:research"), {"topic": "computer use"})
+        self.assertContains(response, "OPENAI_API_KEY")
+        self.assertFalse(TopicResearch.objects.exists())
+
+    def test_post_starts_a_background_web_search(self):
+        client = fake_client()
+        with patch("syllabus.judge.get_client", return_value=client):
+            response = self.client.post(reverse("cms:research"), {"topic": "computer use"})
+
+        research = TopicResearch.objects.get()
+        self.assertRedirects(
+            response,
+            reverse("cms:research_detail", kwargs={"pk": research.pk}),
+            fetch_redirect_response=False,
+        )
+        self.assertEqual(
+            (research.status, research.response_id), (ResearchStatus.RUNNING, "resp_1")
+        )
+        kwargs = client.responses.create.call_args.kwargs
+        self.assertTrue(kwargs["background"])
+        self.assertEqual(kwargs["tools"], [{"type": "web_search"}])
+
+    def test_page_reloads_only_while_running(self):
+        research = self.running()
+        with patch(
+            "syllabus.judge.get_client",
+            return_value=fake_client(model_response(status="in_progress")),
+        ):
+            self.assertContains(self.detail(research), 'http-equiv="refresh"')
+        with patch(
+            "syllabus.judge.get_client", return_value=fake_client(model_response(model_verdict()))
+        ):
+            self.assertNotContains(self.detail(research), 'http-equiv="refresh"')
+
+    def test_accepted_files_exactly_one_dated_draft(self):
+        research = self.running()
+        with patch(
+            "syllabus.judge.get_client", return_value=fake_client(model_response(model_verdict()))
+        ):
+            self.detail(research)
+            self.detail(research)
+            self.client.get(reverse("cms:research"))
+
+        research.refresh_from_db()
+        self.assertEqual(research.verdict, Verdict.ACCEPTED)
+        subject = Subject.objects.get()
+        self.assertEqual(research.subject, subject)
+        self.assertEqual(subject.status, Status.DRAFT)
+        self.assertEqual(subject.became_usable_on, date(2024, 10, 22))
+        self.assertEqual(subject.source_url, "https://example.com/launch")
+
+    def test_rejected_files_nothing_until_drafted_anyway(self):
+        research = self.running()
+        rejected = model_verdict(is_new_subject=False, reason="A nicer version of scripting.")
+        with patch("syllabus.judge.get_client", return_value=fake_client(model_response(rejected))):
+            self.assertContains(self.detail(research), "Draft anyway")
+        self.assertFalse(Subject.objects.exists())
+
+        url = reverse("cms:research_draft", kwargs={"pk": research.pk})
+        response = self.client.post(url)
+        self.assertRedirects(response, reverse("cms:subject_edit", kwargs={"slug": "computer-use"}))
+        self.client.post(url)
+        self.assertEqual(Subject.objects.count(), 1)
+        research.refresh_from_db()
+        self.assertEqual(research.verdict, Verdict.REJECTED_LLM)  # the model's call stands
+
+    def test_unsafe_model_urls_are_dropped(self):
+        research = self.running()
+        data = model_verdict(
+            resource_url="javascript:alert(1)",
+            sources=["javascript:alert(1)", "https://ok.example.com/"],
+        )
+        with patch("syllabus.judge.get_client", return_value=fake_client(model_response(data))):
+            self.detail(research)
+
+        research.refresh_from_db()
+        self.assertEqual(research.result["sources"], ["https://ok.example.com/"])
+        self.assertEqual(Subject.objects.get().resource_url, "")
+
+    def test_a_failed_run_is_recorded(self):
+        research = self.running()
+        with patch(
+            "syllabus.judge.get_client", return_value=fake_client(model_response(status="failed"))
+        ):
+            self.assertContains(self.detail(research), "boom")
+        research.refresh_from_db()
+        self.assertEqual(research.status, ResearchStatus.FAILED)
+
+
+class CrawlJudgeTests(TestCase):
+    """The crawler shares judge.py with research; this pins its accept path."""
+
+    def test_accepted_story_becomes_a_draft_sourced_to_the_story(self):
+        story = {
+            "hn_id": "1",
+            "title": "Computer use",
+            "url": "https://example.com/hn",
+            "points": 99,
+        }
+        payload = {k: v for k, v in model_verdict().items() if k != "became_usable_on"}
+        client = fake_client()
+        client.responses.create.return_value = model_response(payload)
+
+        subject = CrawlCommand(stdout=StringIO()).judge(client, story, index="")
+
+        self.assertEqual(subject.source_url, "https://example.com/hn")
+        self.assertIsNone(subject.became_usable_on)
+        self.assertEqual(CrawlCandidate.objects.get().verdict, Verdict.ACCEPTED)
 
 
 class EditorialAPITests(TestCase):

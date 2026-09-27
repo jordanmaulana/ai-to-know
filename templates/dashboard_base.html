@@ -33,6 +33,10 @@
                class="rounded px-3 py-2 transition {% if current == 'cms:queue' %}-ml-px border-l-2 border-accent bg-white/10 pl-2.5 text-white{% else %}hover:bg-white/5 hover:text-paper{% endif %}">
               Review queue
             </a>
+            <a href="{% url 'cms:research' %}"
+               class="rounded px-3 py-2 transition {% if 'cms:research' in current %}-ml-px border-l-2 border-accent bg-white/10 pl-2.5 text-white{% else %}hover:bg-white/5 hover:text-paper{% endif %}">
+              Research
+            </a>
             <a href="{% url 'cms:editorial' %}"
                class="rounded px-3 py-2 transition {% if current == 'cms:editorial' %}-ml-px border-l-2 border-accent bg-white/10 pl-2.5 text-white{% else %}hover:bg-white/5 hover:text-paper{% endif %}">
               Editorial bar

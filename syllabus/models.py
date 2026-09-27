@@ -85,3 +85,39 @@ class CrawlCandidate(BaseModel):
 
     def __str__(self):
         return f"{self.hn_title} ({self.verdict})"
+
+
+class ResearchStatus(models.TextChoices):
+    RUNNING = "running", "Researching"
+    DONE = "done", "Done"
+    FAILED = "failed", "Failed"
+
+
+class TopicResearch(BaseModel):
+    """A topic an editor typed in for the model to research and judge.
+
+    Runs as an OpenAI background response: `response_id` is how the research page collects
+    the verdict later. `result` keeps the model's full draft copy even on a rejection, so the
+    editor can still file it with "Draft anyway".
+    """
+
+    topic = models.CharField(max_length=300)
+    url = models.URLField(blank=True, default="")
+    status = models.CharField(
+        max_length=20, choices=ResearchStatus.choices, default=ResearchStatus.RUNNING
+    )
+    response_id = models.CharField(max_length=100, blank=True, default="")
+    verdict = models.CharField(max_length=32, choices=Verdict.choices, blank=True, default="")
+    reason = models.TextField(blank=True, default="")
+    result = models.JSONField(default=dict, blank=True)
+    error = models.TextField(blank=True, default="")
+    subject = models.ForeignKey(
+        Subject, null=True, blank=True, on_delete=models.SET_NULL, related_name="research"
+    )
+
+    class Meta:
+        ordering = ["-created_on"]
+        indexes = [models.Index(fields=["status"])]
+
+    def __str__(self):
+        return self.topic

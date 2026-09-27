@@ -1,7 +1,7 @@
 from django import forms
 from django.utils.text import slugify
 
-from syllabus.models import Subject
+from syllabus.models import Subject, TopicResearch
 
 # No widget_tweaks in this project, so the Tailwind classes live with the widgets.
 INPUT = (
@@ -107,3 +107,18 @@ class SubjectForm(forms.ModelForm):
         while taken.filter(slug=slug).exists():
             slug, n = f"{base[:57]}-{n}", n + 1
         return slug
+
+
+class TopicForm(forms.ModelForm):
+    class Meta:
+        model = TopicResearch
+        fields = ["topic", "url"]
+        widgets = {
+            "topic": forms.TextInput(
+                attrs={"class": INPUT, "autofocus": True, "placeholder": "e.g. computer-use agents"}
+            ),
+            "url": forms.URLInput(
+                attrs={"class": INPUT, "placeholder": "optional: the announcement to start from"}
+            ),
+        }
+        labels = {"url": "Link"}

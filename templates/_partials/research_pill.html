@@ -1,0 +1,8 @@
+{# Usage: {% include "_partials/research_pill.html" with research=r %} — status first, then the verdict once it is done #}
+{% if research.status == 'running' %}
+  <span class="inline-flex items-center rounded-full border border-rule bg-paper px-2.5 py-0.5 font-mono text-[0.6875rem] tracking-widest text-muted uppercase">Researching…</span>
+{% elif research.status == 'failed' %}
+  <span class="inline-flex items-center rounded-full border border-red-200 bg-red-50 px-2.5 py-0.5 font-mono text-[0.6875rem] tracking-widest text-red-700 uppercase">Failed</span>
+{% else %}
+  {% include "_partials/verdict_pill.html" with verdict=research.verdict label=research.get_verdict_display %}
+{% endif %}

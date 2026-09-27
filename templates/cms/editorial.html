@@ -65,4 +65,13 @@
     </p>
     <pre class="mt-4 overflow-x-auto rounded-xl border border-rule bg-card p-6 font-mono text-xs leading-relaxed whitespace-pre-wrap text-muted">{{ rubric }}</pre>
   </section>
+
+  <section class="mt-8">
+    <h2 class="text-lg font-semibold tracking-tight">The research rubric, verbatim</h2>
+    <p class="mt-1 text-sm text-muted">
+      What <a href="{% url 'cms:research' %}" class="text-accent underline underline-offset-4">Research</a> judges a typed topic with.
+      Same bar and voice as the crawler. It searches the web first and writes the draft copy even when it rejects.
+    </p>
+    <pre class="mt-4 overflow-x-auto rounded-xl border border-rule bg-card p-6 font-mono text-xs leading-relaxed whitespace-pre-wrap text-muted">{{ research_rubric }}</pre>
+  </section>
 {% endblock %}

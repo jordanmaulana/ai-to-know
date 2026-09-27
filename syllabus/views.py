@@ -4,21 +4,35 @@ Server-rendered, no JavaScript. Filtering, search and pagination are plain query
 every view of the list is a URL you can bookmark or paste to someone else.
 """
 
+import logging
+
 from django.conf import settings
 from django.contrib import messages
 from django.core.paginator import Paginator
+from django.db import transaction
 from django.db.models import F, Q
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.views import View
 
 from core.views import SuperuserRequiredMixin
-from syllabus import editorial, selectors
-from syllabus.forms import SubjectForm
-from syllabus.models import Category, CrawlCandidate, Status, Subject, Verdict
+from syllabus import editorial, judge, selectors
+from syllabus.forms import SubjectForm, TopicForm
+from syllabus.models import (
+    Category,
+    CrawlCandidate,
+    ResearchStatus,
+    Status,
+    Subject,
+    TopicResearch,
+    Verdict,
+)
+
+logger = logging.getLogger(__name__)
 
 SUBJECTS_PER_PAGE = 25
 CANDIDATES_PER_PAGE = 50
+RESEARCH_PER_PAGE = 25
 
 SORTS = {
     "edited": "Recently edited",
@@ -190,9 +204,85 @@ class EditorialView(SuperuserRequiredMixin, View):
                 "qualifies": editorial.QUALIFIES,
                 "disqualifies": editorial.DISQUALIFIES,
                 "rubric": editorial.RUBRIC,
+                "research_rubric": editorial.RESEARCH_RUBRIC,
                 "categories": [
                     (label, editorial.CATEGORY_NOTES.get(value, ""))
                     for value, label in Category.choices
                 ],
             },
         )
+
+
+def refresh_running(request, rows):
+    """Collect any background research that has finished since the last page load."""
+    client = judge.get_client()
+    if client is None:
+        return
+    for research in rows:
+        try:
+            judge.refresh(research, client)
+        except Exception:  # a flaky poll must not take the page down; the next load retries
+            logger.exception("Failed to check on research %s", research.pk)
+            messages.warning(request, f"Could not reach OpenAI about “{research.topic}”.")
+
+
+class ResearchView(SuperuserRequiredMixin, View):
+    """Type a topic, and the model searches the web and judges it against the bar."""
+
+    def get(self, request):
+        return self.render_page(request, TopicForm())
+
+    def post(self, request):
+        form = TopicForm(request.POST)
+        if not form.is_valid():
+            return self.render_page(request, form)
+
+        client = judge.get_client()
+        if client is None:
+            messages.error(request, "OPENAI_API_KEY is not set, so nothing was researched.")
+            return self.render_page(request, form)
+
+        research = form.save(commit=False)
+        research.actor = request.user
+        try:
+            research.response_id = judge.start(client, research.topic, research.url).id
+        except Exception as exc:
+            logger.exception("Failed to start research on %r", research.topic)
+            research.status, research.error = ResearchStatus.FAILED, str(exc)
+        research.save()
+        return redirect("cms:research_detail", pk=research.pk)
+
+    def render_page(self, request, form):
+        refresh_running(request, TopicResearch.objects.filter(status=ResearchStatus.RUNNING))
+        rows = TopicResearch.objects.select_related("subject").order_by("-created_on", "id")
+        page = Paginator(rows, RESEARCH_PER_PAGE).get_page(request.GET.get("page"))
+        return render(request, "cms/research.html", {"form": form, "page_obj": page})
+
+
+class ResearchDetailView(SuperuserRequiredMixin, View):
+    """Its own page so the auto-refresh while it runs cannot wipe a half-typed topic."""
+
+    def get(self, request, pk):
+        research = get_object_or_404(TopicResearch.objects.select_related("subject"), pk=pk)
+        if research.status == ResearchStatus.RUNNING:
+            refresh_running(request, [research])
+            research.refresh_from_db()
+        return render(request, "cms/research_detail.html", {"research": research})
+
+
+class ResearchDraftView(SuperuserRequiredMixin, View):
+    """Overrule the model: file its copy as a draft whatever the verdict was."""
+
+    def post(self, request, pk):
+        with transaction.atomic():
+            research = get_object_or_404(
+                TopicResearch.objects.select_for_update(), pk=pk, status=ResearchStatus.DONE
+            )
+            if research.subject is None:
+                if not research.result.get("title"):
+                    messages.error(request, "The model wrote no copy for this one.")
+                    return redirect("cms:research_detail", pk=pk)
+                research.subject = judge.create_draft(research.result, judge.draft_source(research))
+                research.save(update_fields=["subject", "updated_on"])
+                messages.success(request, f"Filed “{research.subject.title}” as a draft.")
+        return redirect("cms:subject_edit", slug=research.subject.slug)

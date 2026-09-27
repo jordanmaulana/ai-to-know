@@ -6,6 +6,11 @@
 {% block subheading %}The syllabus at a glance, and what the crawler has been filing.{% endblock %}
 
 {% block actions %}
+  <a href="{% url 'cms:research' %}"
+     class="flex items-center gap-2 rounded-md border border-rule px-4 py-2 font-mono text-[0.6875rem] tracking-widest text-muted uppercase transition hover:text-ink">
+    {% include "_partials/icon.html" with name="search" class="h-3.5 w-3.5" %}
+    Research a topic
+  </a>
   <a href="{% url 'cms:subject_new' %}"
      class="flex items-center gap-2 rounded-md bg-ink px-4 py-2 font-mono text-[0.6875rem] tracking-widest text-paper uppercase transition hover:opacity-85">
     {% include "_partials/icon.html" with name="plus" class="h-3.5 w-3.5" %}

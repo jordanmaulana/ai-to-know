@@ -1,7 +1,8 @@
 """The editorial bar: single source of truth.
 
-Read by three consumers: `cms/editorial.html` (the human reference at /dashboard/editorial/),
-`crawl_hn.py` (the rubric the model is judged against), and `document()` below, which serves
+Read by four consumers: `cms/editorial.html` (the human reference at /dashboard/editorial/),
+`crawl_hn.py` (RUBRIC, the prompt stories are judged against), `judge.start` (RESEARCH_RUBRIC,
+for topics typed into /dashboard/research/), and `document()` below, which serves
 the same rules to the public /about page over the API. CLAUDE.md paraphrases this file for
 context; this file is what actually runs.
 """
@@ -40,14 +41,17 @@ CATEGORY_NOTES = {
     "infra": "The plumbing: running, serving, and tuning models.",
 }
 
-RUBRIC = """You curate a public syllabus of AI capabilities for non-experts.
+# Assembled from parts so the crawler and the research page share the bar and the voice
+# rules, and differ only in what they are asked to judge.
+_INTRO = """You curate a public syllabus of AI capabilities for non-experts.
 
 The syllabus answers three questions per entry: what is it, what can I build with it, and
 what was the way before it existed. An entry earns its place ONLY if it unlocks something
 that was impossible or wildly impractical before. "Faster", "cheaper", "a better version of
 an existing tool", benchmark results, funding news, model releases, drama, and opinion
-pieces do NOT qualify.
+pieces do NOT qualify."""
 
+_HN_TASK = """\
 Reject by default. You are judging a Hacker News story title and URL. Set is_new_subject to
 false unless you are confident the story points at a durable new capability an ordinary
 person could use. A specific product launch is usually NOT a subject; the general capability
@@ -55,8 +59,23 @@ it belongs to might be, but if that capability is already in the index below, it
 duplicate, so set duplicate_of_slug and is_new_subject=false.
 
 When you reject, still fill the content fields with empty strings and pick any category.
-Only is_new_subject, duplicate_of_slug and reason are read.
+Only is_new_subject, duplicate_of_slug and reason are read."""
 
+_RESEARCH_TASK = """\
+Reject by default. An editor has typed a topic, sometimes with a link. Search the
+web before you judge: find out what it is, whether an ordinary person can use it today, and
+when that first became true. A specific product is usually NOT a subject; the general
+capability it belongs to might be, but if that capability is already in the index below, it
+is a duplicate, so set duplicate_of_slug and is_new_subject=false.
+
+Fill every content field even when you reject: the editor may overrule you and file your
+copy as a draft. became_usable_on is the day ordinary people could first use it, as
+YYYY-MM-DD, or null if you could not pin it down. source_url is the announcement that dates
+it; resource_url is where a newcomer should start. Fill date_note only when the date is a
+judgement call, and say why. List every URL you relied on in sources, and never cite a page
+you did not open."""
+
+_VOICE = """\
 VOICE. Write the content fields in plain British English for a smart person who is not an
 engineer, in the register you would speak in. No hype and no exclamation marks. The rules
 below exist because the copy they describe reads as machine-written; follow all of them.
@@ -73,6 +92,9 @@ below exist because the copy they describe reads as machine-written; follow all 
    the same three-beat pattern every time.
 7. Prefer a specific example to a general claim: a named task, a real document, an actual
    job someone stopped doing by hand."""
+
+RUBRIC = "\n\n".join([_INTRO, _HN_TASK, _VOICE])
+RESEARCH_RUBRIC = "\n\n".join([_INTRO, _RESEARCH_TASK, _VOICE])
 
 
 def document():
