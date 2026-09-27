@@ -17,10 +17,12 @@ DEBUG = os.environ.get("DEBUG", "True").lower() == "true"
 if not DEBUG and SECRET_KEY.startswith("django-insecure-"):
     raise RuntimeError("SECRET_KEY must be set in production")
 
+# Loopback always passes: the compose healthcheck curls 127.0.0.1:8000, and an env that lists
+# only the public hostname would 400 it and keep backend `unhealthy` forever.
 ALLOWED_HOSTS = [
-    h.strip()
-    for h in os.environ.get("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")
-    if h.strip()
+    "localhost",
+    "127.0.0.1",
+    *(h.strip() for h in os.environ.get("DJANGO_ALLOWED_HOSTS", "").split(",") if h.strip()),
 ]
 
 INSTALLED_APPS = [
